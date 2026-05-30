@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FitLife | Premium Fitness Coaching & Dynamic Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <nav>
+    <div class="logo-area">
+      <a href="#" onclick="showSection('home'); return false;" style="text-decoration: none;">
+        <h2>FitLife</h2>
+      </a>
+    </div>
+    
+    <button class="menu-btn" aria-label="Toggle Navigation Menu">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+
+    <ul>
+      <li><a href="#home" onclick="showSection('home'); return false;" class="active">Home</a></li>
+      <li><a href="#plans" onclick="showSection('plans'); return false;">Plans</a></li>
+      <li><a href="#tools" onclick="showSection('tools'); return false;">Tools</a></li>
+      <li><a href="#about" onclick="showSection('about'); return false;">About</a></li>
+      <li><a href="#contact" onclick="showSection('contact'); return false;">Contact</a></li>
+      <li><a href="#formSection" onclick="showSection('formSection'); return false;" class="nav-cta">Join Now</a></li>
+    </ul>
+  </nav>
+
+  <!-- LANDING SECTIONS CONTAINER -->
+  <!-- We wrap these sections in a class so we can easily hide/show them when entering the dashboard -->
+  <div class="landing-section" id="home-wrapper">
+    <!-- HERO SECTION -->
+    <section class="hero" id="home">
+      <div class="overlay">
+        <h1>Transform Your Body,<br>Elevate Your Life</h1>
+        <p>Expert online fitness training, meal mapping, and custom progress analytics. Start building your dream physique today.</p>
+        <div style="display: flex; justify-content: center; gap: 15px; flex-wrap: wrap;">
+          <button id="startBtn">Get Started Now</button>
+          <a href="#tools" onclick="showSection('tools'); return false;" class="btn btn-secondary">Try Free Tools</a>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="landing-section" id="plans-wrapper">
+    <!-- PLANS SECTION -->
+    <section id="plans">
+      <div class="section-header">
+        <span class="section-tag">Flexible Membership</span>
+        <h2>Choose Your Fitness Level</h2>
+        <p class="section-desc">Unlock customized routines, video training, and live support suited to your individual goals.</p>
+      </div>
+
+      <div class="cards">
+        <!-- FREE PLAN -->
+        <div class="card">
+          <div class="card-img-wrapper">
+            <img src="https://images.unsplash.com/photo-1518611012118-696072aa579a?q=80&w=800&auto=format&fit=crop" alt="Free Workout Plan Image">
+          </div>
+          <div class="card-content">
+            <h3>Free Starter</h3>
+            <h1>₹0<span>/ forever</span></h1>
+            <ul>
+              <li>Basic Home Workouts</li>
+              <li>Pushups & Squats Checklist</li>
+              <li>Stretching Exercises</li>
+              <li>Basic BMI & Water Loggers</li>
+              <li>Ad-supported access</li>
+            </ul>
+            <button onclick="selectPlan('Free')">Start Free</button>
+          </div>
+        </div>
+
+        <!-- STANDARD PLAN -->
+        <div class="card">
+          <div class="card-img-wrapper">
+            <img src="https://images.unsplash.com/photo-1517838277536-f5f99be501cd?q=80&w=800&auto=format&fit=crop" alt="Standard Workout Plan Image">
+          </div>
+          <div class="card-content">
+            <h3>Standard Hypertrophy</h3>
+            <h1>₹499<span>/ month</span></h1>
+            <ul>
+              <li>Full Strength Schedule</li>
+              <li>Customized Diet Blueprint</li>
+              <li>Interactive Progress Tracker</li>
+              <li>Some Video Support</li>
+              <li>Email Trainer Support</li>
+            </ul>
+            <button onclick="selectPlan('Standard')">Choose Plan</button>
+          </div>
+        </div>
+
+        <!-- PREMIUM PLAN (RECOMMENDED) -->
+        <div class="card premium">
+          <div class="card-img-wrapper">
+            <img src="https://images.unsplash.com/photo-1517963879433-6ad2b056d712?q=80&w=800&auto=format&fit=crop" alt="Premium Workout Plan Image">
+          </div>
+          <div class="card-content">
+            <h3>Premium Elite</h3>
+            <h1>₹899<span>/ month</span></h1>
+            <ul>
+              <li>Premium Video Workouts</li>
+              <li>1-on-1 Google Meet Calls</li>
+              <li>Dedicated Personal Coach</li>
+              <li>Custom Macronutrient Mapping</li>
+              <li>24/7 WhatsApp VIP Support</li>
+            </ul>
+            <button disabled class="btn-disabled" style="background: #222; color: #666; border: 1px solid #333; cursor: not-allowed; text-transform: uppercase;">Under Development</button>
+            <p style="color: var(--text-muted); font-size: 11px; margin-top: 10px; text-align: center; font-style: italic;">Premium features will be implemented in the future.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="landing-section" id="tools-wrapper">
+    <!-- INTERACTIVE TOOLS SECTION -->
+    <section id="tools">
+      <div class="section-header">
+        <span class="section-tag">Instant Utilities</span>
+        <h2>Try Our Interactive Tools</h2>
+        <p class="section-desc">Assess your current body mass index and track your daily hydration levels right here before you sign up.</p>
+      </div>
+
+      <div class="tools-grid">
+        <!-- BMI Calculator -->
+        <div class="tool-card">
+          <h3><span>⚖️</span> BMI Calculator</h3>
+          <p class="section-desc" style="text-align: left; margin: 0 0 20px;">Calculate your Body Mass Index to guide your training structure.</p>
+          <div class="input-row">
+            <div class="form-group">
+              <label for="bmi-weight">Weight (kg)</label>
+              <input type="number" id="bmi-weight" placeholder="e.g. 70" min="20" max="300">
+            </div>
+            <div class="form-group">
+              <label for="bmi-height">Height (cm)</label>
+              <input type="number" id="bmi-height" placeholder="e.g. 175" min="100" max="250">
+            </div>
+          </div>
+          <button id="calculateBmiBtn" style="width: 100%;">Calculate BMI</button>
+
+          <div class="bmi-result-wrapper" id="bmiResultWrapper">
+            <div class="bmi-num" id="bmiNum">--</div>
+            <div class="bmi-status" id="bmiStatus">Normal</div>
+            <div class="bmi-meter">
+              <div class="bmi-progress" id="bmiProgress"></div>
+            </div>
+            <div class="bmi-tips" id="bmiTips">Keep up the good work! Maintain a healthy lifestyle.</div>
+          </div>
+        </div>
+
+        <!-- Water Hydration Tracker -->
+        <div class="tool-card">
+          <h3><span>🥤</span> Water Intake Tracker</h3>
+          <p class="section-desc" style="text-align: left; margin: 0 0 20px;">Stay hydrated! Aim for at least 8 cups (2 liters) of water daily.</p>
+          
+          <div class="water-container">
+            <div class="water-bottle-outline">
+              <div class="water-level" id="waterLevel">
+                <span class="water-bubble"></span>
+                <span class="water-bubble"></span>
+                <span class="water-bubble"></span>
+              </div>
+            </div>
+
+            <div class="water-stats">
+              <h4 id="waterCount">0 / 8</h4>
+              <p>Cups Logged (Progress: <span id="waterProgressPercent">0%</span>)</p>
+            </div>
+
+            <div class="water-buttons">
+              <button id="addWaterBtn" class="btn-water">Drink 1 Cup</button>
+              <button id="resetWaterBtn" class="btn btn-secondary btn-water">Reset</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="landing-section" id="about-wrapper">
+    <!-- ABOUT SECTION -->
+    <section id="about">
+      <div class="about-content">
+        <div class="about-img">
+          <img src="https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?q=80&w=800&auto=format&fit=crop" alt="FitLife Gym Image">
+        </div>
+        <div class="about-text">
+          <span class="section-tag">Who We Are</span>
+          <h2>We Help You Build Sustainable Fitness Habits</h2>
+          <p>At FitLife, we believe true transformation starts from combining science-backed fitness routines with consistency. We make coaching highly accessible and modern, giving you interactive dashboard logs to check off exercises, calculate active energy burned, and stay in touch with elite coaches directly.</p>
+          
+          <div class="features-list">
+            <div class="feature-item"><span>1</span> Structured Workout Plans</div>
+            <div class="feature-item"><span>2</span> Live Meet Coaching Calls</div>
+            <div class="feature-item"><span>3</span> Macronutrient Mapping</div>
+            <div class="feature-item"><span>4</span> Interactive Logs & Analytics</div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="landing-section" id="contact-wrapper">
+    <!-- CONTACT SECTION -->
+    <section id="contact">
+      <div class="section-header">
+        <span class="section-tag">Get in Touch</span>
+        <h2>Need Help? Contact Us</h2>
+        <p class="section-desc">Have questions about plans, pricing, or custom training? Reach out to our 24/7 response team.</p>
+      </div>
+
+      <div class="contact-grid">
+        <div class="contact-card">
+          <div class="contact-icon">✉️</div>
+          <h4>Email Support</h4>
+          <p>sameerkhan637577@gmail.com</p>
+        </div>
+        <div class="contact-card">
+          <div class="contact-icon">📞</div>
+          <h4>Call or WhatsApp</h4>
+          <p>+91 6375771513</p>
+        </div>
+        <div class="contact-card">
+          <div class="contact-icon">📍</div>
+          <h4>Located</h4>
+          <p>Jodhpur, Rajasthan, India</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ONBOARDING FORM SECTION -->
+  <section class="form-section" id="formSection">
+    <div class="form-box">
+      <h2>Join Your Fitness Journey</h2>
+      <p>Fill out your details to unlock your personal workspace and active logs.</p>
+      
+      <form id="userForm">
+        <div class="form-group" style="margin-bottom: 15px;">
+          <label for="name">Your Name</label>
+          <input type="text" id="name" placeholder="Fit Life" required>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 15px;">
+          <label for="email">Email Address</label>
+          <input type="email" id="email" placeholder="wefit@example.com" required>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 25px;">
+          <label for="plan">Choose Workout Tier</label>
+          <select id="plan">
+            <option value="Free">Free Plan (Basic routines)</option>
+            <option value="Standard">Standard Plan (Hypertrophy routines)</option>
+            <option value="Premium" disabled>Premium Plan (Coming Soon)</option>
+          </select>
+        </div>
+
+        <button type="submit">Unlock Dashboard 🚀</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- PAYMENT SECTION (Hidden by default) -->
+  <section class="payment-section" id="paymentSection" style="display: none;">
+    <div class="payment-box">
+      <h2>Complete Your Payment</h2>
+      <p id="paymentPlanSummary" style="color: var(--text-muted); margin-bottom: 20px; font-weight: 700; text-transform: uppercase; text-align: center;">Standard Plan - ₹499</p>
+      
+      <!-- Payment Methods Tabs -->
+      <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+        <button id="payUpiTab" class="btn active" style="flex: 1; font-size: 13px;" onclick="switchPaymentMethod('upi')">UPI ID</button>
+        <button id="payQrTab" class="btn btn-secondary" style="flex: 1; font-size: 13px;" onclick="switchPaymentMethod('qr')">QR Code</button>
+      </div>
+
+      <!-- UPI Payment View -->
+      <div id="paymentUpiView" style="background: #111; padding: 20px; border-radius: 4px; border: 1px solid var(--border-color); text-align: center; margin-bottom: 20px;">
+        <p style="font-size: 11px; color: var(--text-muted); margin-bottom: 10px; text-transform: uppercase; font-weight: 700;">Copy UPI ID Below:</p>
+        <div style="display: flex; gap: 10px; justify-content: center; align-items: center; background: #000; border: 1px solid var(--border-color); padding: 10px; border-radius: 4px; margin-bottom: 15px; flex-wrap: wrap;">
+          <code id="upiIdText" style="font-family: monospace; font-size: 13px; color: var(--primary); font-weight: 700;">sameerkhan637577@okhdfcbank</code>
+          <button onclick="copyUpiId()" id="copyUpiBtn" style="padding: 4px 10px; font-size: 11px; margin: 0;">Copy</button>
+        </div>
+        <p style="font-size: 12px; color: var(--text-muted);">Please make the payment of your selected plan amount to this UPI ID using any UPI App (GPay, PhonePe, Paytm).</p>
+      </div>
+
+      <!-- QR Payment View -->
+      <div id="paymentQrView" style="display: none; background: #111; padding: 20px; border-radius: 4px; border: 1px solid var(--border-color); text-align: center; margin-bottom: 20px;">
+        <div id="qrCodeContainer" style="background: white; padding: 15px; border-radius: 4px; display: inline-block; margin-bottom: 15px;">
+          <!-- UPI QR Code uploaded by user -->
+          <img src="qr_code.jpg" alt="UPI Payment QR Code" style="width: 180px; height: 180px; display: block; object-fit: contain; margin: 0 auto;">
+        </div>
+        <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 5px;">Scan this QR using any UPI app (GPay, PhonePe, Paytm) to make the payment.</p>
+      </div>
+
+      <!-- Transaction Confirmation Form -->
+      <form id="paymentConfirmForm">
+        <div class="form-group" style="margin-bottom: 20px;">
+          <label for="txnRefId">UPI Transaction Ref ID / UTR</label>
+          <input type="text" id="txnRefId" placeholder="Enter 12-digit UPI UTR ID" pattern="[0-9]{12}" title="Please enter a valid 12-digit UPI Transaction Ref ID" required>
+        </div>
+        
+        <button type="submit" style="width: 100%; margin-bottom: 10px;">Verify Payment & Unlock Dashboard</button>
+        <button type="button" class="btn btn-secondary" style="width: 100%;" onclick="cancelPayment()">Cancel & Edit Details</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- DASHBOARD SECTION -->
+  <section class="dashboard" id="dashboard">
+    <div class="dashboard-box">
+      <!-- Profile Header -->
+      <div class="dashboard-header">
+        <div class="user-badge">
+          <div class="user-avatar" id="userAvatar">U</div>
+          <div class="user-info">
+            <h3 id="dashName">Welcome!</h3>
+            <p id="dashEmail">user@example.com</p>
+          </div>
+        </div>
+        <div>
+          <span class="plan-badge" id="dashPlanBadge">Free Plan</span>
+          <button onclick="logoutDashboard();" class="btn btn-secondary" style="padding: 6px 16px; font-size: 13px; margin-left: 10px;">Exit Panel</button>
+        </div>
+      </div>
+
+      <!-- Tabs Navigation -->
+      <div class="dash-tabs">
+        <button class="dash-tab active" id="my-plan-tab">My Workout Plan</button>
+        <button class="dash-tab" id="calorie-tab">Calorie Estimator</button>
+        <button class="dash-tab" id="logs-tab">Profile & Activity Logs</button>
+      </div>
+
+      <!-- Tab Content 1: Workout details -->
+      <div class="dash-content-section active" id="my-plan-content">
+        <div id="planDetails">
+          <!-- Dynamically populated by JS -->
+        </div>
+      </div>
+
+      <!-- Tab Content 2: Calorie calculator -->
+      <div class="dash-content-section" id="calorie-content">
+        <h3>Calorie Burned Estimator</h3>
+        <p class="section-desc" style="text-align: left; margin: 0 0 20px;">Calculate estimated calories burned based on exercise intensity and duration.</p>
+        
+        <div class="calc-row">
+          <div class="form-group">
+            <label for="calc-type">Exercise Type</label>
+            <select id="calc-type">
+              <option value="hiit">HIIT (High-Intensity Interval Training)</option>
+              <option value="cardio-run">Running (Moderate pace)</option>
+              <option value="cardio-cycle">Cycling (Vigorous pace)</option>
+              <option value="strength">Weight Lifting (Heavy hypertrophy)</option>
+              <option value="yoga">Yoga Flow (Power vinyasa)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="calc-duration">Duration (Minutes)</label>
+            <input type="number" id="calc-duration" placeholder="e.g. 45" min="1" max="300">
+          </div>
+        </div>
+        <button id="calculateBurnBtn" style="margin-bottom: 25px;">Estimate Calorie Burn</button>
+
+        <div class="calorie-result" id="burnResult" style="display: none;">
+          <div class="calorie-number" id="caloriesBurnedText">0</div>
+          <p style="font-weight: 600; font-size: 18px; color: var(--primary);">Kcal Burned</p>
+          <p class="section-desc" style="margin-top: 5px; font-size: 13px;">Burn estimations are calculated using MET benchmarks and average weight coefficients.</p>
+        </div>
+      </div>
+
+      <!-- Tab Content 3: Stats logs -->
+      <div class="dash-content-section" id="logs-content">
+        <h3>My Personal Activity Logs</h3>
+        <p class="section-desc" style="text-align: left; margin: 0 0 20px;">Review your synced biological and hydration logs recorded during this session.</p>
+
+        <div class="stats-summary">
+          <div class="stat-box">
+            <span class="stat-title">Last Calculated BMI</span>
+            <span class="stat-value" id="logBmi">Not Calculated</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-title">Daily Hydration Log</span>
+            <span class="stat-value" id="logWater">0 / 8 Cups</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-title">Daily Routine Tracker</span>
+            <span class="stat-value" id="logExercises">0 / 4 Completed</span>
+          </div>
+          <div class="stat-box" id="logPaymentBox" style="display: none;">
+            <span class="stat-title">Payment Info</span>
+            <span class="stat-value" id="logPayment">N/A</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <p>&copy; 2026 FitLife Platforms. All Rights Reserved.</p>
+    <p>Empowering individuals to train smarter and live healthier lives.</p>
+    <div class="footer-links">
+      <a href="#home" onclick="showSection('home'); return false;">Home</a>
+      <a href="#plans" onclick="showSection('plans'); return false;">Plans</a>
+      <a href="#tools" onclick="showSection('tools'); return false;">Tools</a>
+      <a href="#about" onclick="showSection('about'); return false;">About</a>
+      <a href="#contact" onclick="showSection('contact'); return false;">Contact</a>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
