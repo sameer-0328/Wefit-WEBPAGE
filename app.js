@@ -89,24 +89,29 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const saveBtn = document.getElementById("dashSaveBtn");
     if (saveBtn) {
-      const originalText = saveBtn.innerHTML;
       saveBtn.innerHTML = "Submitting... 🔄";
       saveBtn.style.opacity = "0.7";
       saveBtn.style.pointerEvents = "none";
       setTimeout(() => {
         saveBtn.innerHTML = "Submitted! ✓";
-        saveBtn.style.background = "#4ade80"; // Bright normal green
-        saveBtn.style.color = "#000000";
-        setTimeout(() => {
-          saveBtn.innerHTML = originalText;
-          saveBtn.style.background = "";
-          saveBtn.style.color = "";
-          saveBtn.style.opacity = "";
-          saveBtn.style.pointerEvents = "";
-        }, 2000);
-      }, 1000);
+        saveBtn.style.background = "#22c55e"; // Success green
+        saveBtn.style.color = "#ffffff";
+        saveBtn.style.opacity = "1";
+        saveBtn.style.pointerEvents = "none"; // Inactive until user changes workout stats
+      }, 800);
     } else {
       alert("Progress saved successfully!");
+    }
+  };
+
+  window.markProgressUnsaved = function() {
+    const saveBtn = document.getElementById("dashSaveBtn");
+    if (saveBtn && saveBtn.innerHTML !== "Submit Progress 📤") {
+      saveBtn.innerHTML = "Submit Progress 📤";
+      saveBtn.style.background = ""; // Restore defaults
+      saveBtn.style.color = "";
+      saveBtn.style.opacity = "";
+      saveBtn.style.pointerEvents = "";
     }
   };
 
@@ -317,6 +322,7 @@ document.addEventListener("DOMContentLoaded", () => {
       logWater.textContent = `${waterCount} / ${waterTarget} Cups (${percent.toFixed(0)}%)`;
     }
     syncUserProgress();
+    markProgressUnsaved();
   }
 
   // ONBOARDING FORM SUBMISSION
@@ -1037,6 +1043,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         calculateProgress();
         syncUserProgress();
+        markProgressUnsaved();
       });
     });
 
@@ -1166,6 +1173,7 @@ document.addEventListener("DOMContentLoaded", () => {
       logBmi.innerHTML = `${activeBmi}<br><span style="font-size: 11px; color:var(--text-muted); font-weight:500;">Last Weight Logged: ${logEntry.weight}</span>`;
     }
     syncUserProgress();
+    markProgressUnsaved();
   };
 
   function renderWeightLogTable() {
@@ -1202,6 +1210,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     document.getElementById("trainerQueryText").value = "";
     syncUserProgress();
+    markProgressUnsaved();
 
     const userName = window.registeredName || "FitLife Athlete";
     const userEmail = window.registeredEmail || "Not Provided";
