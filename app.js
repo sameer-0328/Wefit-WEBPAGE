@@ -78,6 +78,38 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
+  window.syncUserProgressManual = function() {
+    const email = window.registeredEmail;
+    if (!email) {
+      alert("No active registration found. Please register first.");
+      return;
+    }
+    
+    window.syncUserProgress();
+
+    const saveBtn = document.getElementById("dashSaveBtn");
+    if (saveBtn) {
+      const originalText = saveBtn.innerHTML;
+      saveBtn.innerHTML = "Saving... 🔄";
+      saveBtn.style.opacity = "0.7";
+      saveBtn.style.pointerEvents = "none";
+      setTimeout(() => {
+        saveBtn.innerHTML = "Saved! ✓";
+        saveBtn.style.background = "#4ade80"; // Bright normal green
+        saveBtn.style.color = "#000000";
+        setTimeout(() => {
+          saveBtn.innerHTML = originalText;
+          saveBtn.style.background = "";
+          saveBtn.style.color = "";
+          saveBtn.style.opacity = "";
+          saveBtn.style.pointerEvents = "";
+        }, 2000);
+      }, 1000);
+    } else {
+      alert("Progress saved successfully!");
+    }
+  };
+
   // ELEMENTS
   const nav = document.querySelector("nav");
   const menuBtn = document.querySelector(".menu-btn");
@@ -340,6 +372,11 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("dashName").textContent = `Welcome, ${name}!`;
     document.getElementById("dashEmail").textContent = email;
     document.getElementById("dashPlanBadge").textContent = `${plan} Plan`;
+
+    const saveBtn = document.getElementById("dashSaveBtn");
+    if (saveBtn) {
+      saveBtn.style.display = plan === "Standard" ? "inline-flex" : "none";
+    }
 
     // Initialize Active Tab
     switchDashboardTab("my-plan-tab");
@@ -768,7 +805,7 @@ document.addEventListener("DOMContentLoaded", () => {
       `;
     } else if (plan === "Standard") {
       detailsHtml = `
-        <h3 style="margin-bottom: 20px; font-weight: 900; color: var(--primary);">7-Day Hypertrophy Workspace</h3>
+        <h3 style="margin-bottom: 20px; font-weight: 900; color: var(--primary);">Standard Hypertrophy Workspace</h3>
         
         <!-- SECTION 1: 7-DAY WORKOUT SPLIT -->
         <div style="border: 1px solid var(--border-color); padding: 20px; border-radius: 6px; margin-bottom: 25px;">
