@@ -90,11 +90,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const saveBtn = document.getElementById("dashSaveBtn");
     if (saveBtn) {
       const originalText = saveBtn.innerHTML;
-      saveBtn.innerHTML = "Saving... 🔄";
+      saveBtn.innerHTML = "Submitting... 🔄";
       saveBtn.style.opacity = "0.7";
       saveBtn.style.pointerEvents = "none";
       setTimeout(() => {
-        saveBtn.innerHTML = "Saved! ✓";
+        saveBtn.innerHTML = "Submitted! ✓";
         saveBtn.style.background = "#4ade80"; // Bright normal green
         saveBtn.style.color = "#000000";
         setTimeout(() => {
@@ -340,6 +340,8 @@ document.addEventListener("DOMContentLoaded", () => {
     if (plan === "Free") {
       completeRegistrationAndUnlockDashboard(name, email, plan);
     } else {
+      saveUserToDatabase(name, email, plan, "Pending");
+
       const amount = plan === "Standard" ? "₹499" : "₹899";
       document.getElementById("paymentPlanSummary").textContent = `${plan} Plan - ${amount}`;
       formSection.style.display = "none";
