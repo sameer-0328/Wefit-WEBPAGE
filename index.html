@@ -83,10 +83,10 @@
             <img src="https://images.unsplash.com/photo-1517838277536-f5f99be501cd?q=80&w=800&auto=format&fit=crop" alt="Standard Workout Plan Image">
           </div>
           <div class="card-content">
-            <h3>Standard Hypertrophy</h3>
+            <h3>7-Day Hypertrophy</h3>
             <h1>₹499<span>/ month</span></h1>
             <ul>
-              <li>Full Strength Schedule</li>
+              <li>7-Day Workout Split</li>
               <li>Customized Diet Blueprint</li>
               <li>Interactive Progress Tracker</li>
               <li>Some Video Support</li>
@@ -257,7 +257,7 @@
           <label for="plan">Choose Workout Tier</label>
           <select id="plan">
             <option value="Free">Free Plan (Basic routines)</option>
-            <option value="Standard">Standard Plan (Hypertrophy routines)</option>
+            <option value="Standard">7-Day Plan (₹499/month)</option>
             <option value="Premium" disabled>Premium Plan (Coming Soon)</option>
           </select>
         </div>
@@ -271,7 +271,7 @@
   <section class="payment-section" id="paymentSection" style="display: none;">
     <div class="payment-box">
       <h2>Complete Your Payment</h2>
-      <p id="paymentPlanSummary" style="color: var(--text-muted); margin-bottom: 20px; font-weight: 700; text-transform: uppercase; text-align: center;">Standard Plan - ₹499</p>
+      <p id="paymentPlanSummary" style="color: var(--text-muted); margin-bottom: 20px; font-weight: 700; text-transform: uppercase; text-align: center;">7-Day Plan - ₹499</p>
       
       <!-- Payment Methods Tabs -->
       <div style="display: flex; gap: 10px; margin-bottom: 20px;">
@@ -411,9 +411,119 @@
       <a href="#tools" onclick="showSection('tools'); return false;">Tools</a>
       <a href="#about" onclick="showSection('about'); return false;">About</a>
       <a href="#contact" onclick="showSection('contact'); return false;">Contact</a>
+      <a href="#" onclick="openAdminLogin(); return false;" style="color: var(--primary); font-weight:700;">Admin 🔑</a>
     </div>
   </footer>
 
+  <!-- ADMIN LOGIN MODAL -->
+  <div id="adminLoginModal" class="admin-modal" style="display: none;">
+    <div class="admin-modal-content">
+      <span class="close-modal" onclick="closeAdminLogin()">&times;</span>
+      <h2>Admin Access</h2>
+      <p>Enter password to access trainer records.</p>
+      <form id="adminLoginForm">
+        <div class="form-group" style="margin-bottom: 20px;">
+          <input type="password" id="adminPasscode" placeholder="Enter Admin Password (admin123)" required style="width: 100%; padding: 12px; background: #000; border: 1px solid var(--border-color); color: white; border-radius: 4px;">
+        </div>
+        <button type="submit" style="width: 100%;">Verify Passcode</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ADMIN DASHBOARD SECTION -->
+  <section class="admin-dashboard" id="adminDashboard" style="display: none; max-width: 1200px; margin: 40px auto; padding: 0 5%;">
+    <div class="dashboard-box" style="max-width: 100%;">
+      <div class="dashboard-header">
+        <div>
+          <h2 style="text-align: left; font-size: 26px;">Admin Panel</h2>
+          <p style="color: var(--text-muted); font-size: 13px;">View real-time registered athletes and their active workouts.</p>
+        </div>
+        <button onclick="closeAdminDashboard();" class="btn btn-secondary" style="padding: 8px 16px; font-size: 13px;">Exit Admin Panel</button>
+      </div>
+
+      <div style="display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;">
+        <input type="text" id="adminSearchInput" placeholder="Search by name or email..." style="flex: 1; min-width: 250px; background: #111; border: 1px solid var(--border-color); color: white; padding: 10px 14px; border-radius: 4px; font-size: 14px;" oninput="filterAdminUsers()">
+        <button onclick="fetchAdminData()" class="btn" style="padding: 10px 20px; font-size: 14px;">🔄 Refresh Logs</button>
+      </div>
+
+      <div class="admin-table-wrapper" style="background: #111; border: 1px solid var(--border-color); border-radius: 4px; overflow-x: auto; margin-bottom: 30px;">
+        <table class="weight-log-table" style="width: 100%; border-collapse: collapse;">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Plan</th>
+              <th>UTR ID</th>
+              <th>Water</th>
+              <th>Checklist</th>
+              <th>Weight</th>
+              <th>Detail</th>
+            </tr>
+          </thead>
+          <tbody id="adminUserTableBody">
+            <tr>
+              <td colspan="9" style="text-align: center; padding: 20px; color: var(--text-muted);">No users found. Click Refresh or check configuration.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Detail Modal for Selected User -->
+      <div id="adminUserDetailBox" style="display: none; border-top: 1px solid var(--border-color); padding-top: 25px; margin-top: 25px;">
+        <h3 id="detailUserName" style="font-family: var(--font-heading); text-transform: uppercase; color: var(--primary); margin-bottom: 15px; font-size: 18px;">User Detail</h3>
+        <div class="stats-summary" style="margin-bottom: 25px;">
+          <div class="stat-box">
+            <span class="stat-title">Active Plan</span>
+            <span class="stat-value" id="detailUserPlan" style="font-size: 18px;">-</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-title">Last Weight</span>
+            <span class="stat-value" id="detailUserWeight" style="font-size: 18px;">-</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-title">Water Logged</span>
+            <span class="stat-value" id="detailUserWater" style="font-size: 18px;">-</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-title">Checklist Complete</span>
+            <span class="stat-value" id="detailUserChecklist" style="font-size: 18px;">-</span>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; flex-wrap: wrap;">
+          <div>
+            <h4 style="text-transform: uppercase; font-size: 13px; margin-bottom: 10px; color: var(--text-main); font-weight: 800;">Weight History</h4>
+            <div class="weight-log-table-wrapper" style="max-height: 180px;">
+              <table class="weight-log-table">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Weight</th>
+                  </tr>
+                </thead>
+                <tbody id="detailUserWeightTableBody">
+                  <tr><td colspan="2" style="text-align: center; color: var(--text-muted);">No weight history.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div>
+            <h4 style="text-transform: uppercase; font-size: 13px; margin-bottom: 10px; color: var(--text-main); font-weight: 800;">Support Queries</h4>
+            <div class="weight-log-table-wrapper" style="max-height: 180px; padding: 15px;">
+              <div id="detailUserQueries" style="display: flex; flex-direction: column; gap: 8px;">
+                <p style="color: var(--text-muted); font-size: 13px; text-align: center;">No queries submitted.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Firebase Web SDK (v8 compatibility script) -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

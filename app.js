@@ -1,4 +1,83 @@
 document.addEventListener("DOMContentLoaded", () => {
+  // FIREBASE CONFIGURATION & INITIALIZATION
+  // Replace the databaseURL value below with your Firebase Realtime Database URL
+  const firebaseConfig = {
+    databaseURL: "https://wefit-webpage-default-rtdb.firebaseio.com"
+  };
+
+  let db = null;
+  try {
+    if (typeof firebase !== 'undefined' && firebaseConfig.databaseURL && !firebaseConfig.databaseURL.includes("<your-firebase-database-name>")) {
+      firebase.initializeApp(firebaseConfig);
+      db = firebase.database();
+      console.log("Firebase initialized successfully!");
+    } else {
+      console.log("Firebase CDN not loaded or config set to default. Operating in LocalStorage mode.");
+    }
+  } catch (error) {
+    console.error("Firebase init failed. Operating in LocalStorage mode:", error);
+  }
+
+  function getSafeEmailKey(email) {
+    return email.toLowerCase().replace(/[.#$[\]]/g, "_");
+  }
+
+  window.saveUserToDatabase = function(name, email, plan, txnRefId = "N/A") {
+    const emailKey = getSafeEmailKey(email);
+    const dateStr = new Date().toLocaleDateString();
+
+    const userDataObj = {
+      name: name,
+      email: email,
+      plan: plan,
+      registrationDate: dateStr,
+      txnRefId: txnRefId,
+      lastUpdated: new Date().toISOString(),
+      waterCount: window.userWaterCount || 0,
+      waterTarget: window.userWaterTarget || 8,
+      completedExercisesCount: 0,
+      totalExercisesCount: 0,
+      weightLogs: window.weightLogs || [],
+      queries: window.trainerQueries || []
+    };
+
+    if (db) {
+      db.ref("users/" + emailKey).update(userDataObj);
+    }
+    localStorage.setItem("fitlife_current_user", JSON.stringify(userDataObj));
+  };
+
+  window.syncUserProgress = function() {
+    const email = window.registeredEmail;
+    if (!email) return;
+
+    const emailKey = getSafeEmailKey(email);
+    const checkboxes = document.querySelectorAll(".workout-chk");
+    const checkedCount = Array.from(checkboxes).filter(chk => chk.checked).length;
+    const totalChk = checkboxes.length;
+
+    const progressUpdate = {
+      waterCount: window.userWaterCount || 0,
+      waterTarget: window.userWaterTarget || 8,
+      completedExercisesCount: checkedCount,
+      totalExercisesCount: totalChk,
+      weightLogs: window.weightLogs || [],
+      queries: window.trainerQueries || [],
+      lastUpdated: new Date().toISOString()
+    };
+
+    if (db) {
+      db.ref("users/" + emailKey).update(progressUpdate);
+    }
+
+    let localData = localStorage.getItem("fitlife_current_user");
+    if (localData) {
+      let parsed = JSON.parse(localData);
+      Object.assign(parsed, progressUpdate);
+      localStorage.setItem("fitlife_current_user", JSON.stringify(parsed));
+    }
+  };
+
   // ELEMENTS
   const nav = document.querySelector("nav");
   const menuBtn = document.querySelector(".menu-btn");
@@ -205,6 +284,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (logWater) {
       logWater.textContent = `${waterCount} / ${waterTarget} Cups (${percent.toFixed(0)}%)`;
     }
+    syncUserProgress();
   }
 
   // ONBOARDING FORM SUBMISSION
@@ -242,6 +322,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // HELPER TO COMPLETE REGISTRATION & SHOW DASHBOARD
   function completeRegistrationAndUnlockDashboard(name, email, plan) {
+    saveUserToDatabase(name, email, plan, window.txnRefId || "N/A");
+
     // Hide Landing Page sections
     document.querySelectorAll(".landing-section").forEach(sec => {
       sec.style.display = "none";
@@ -368,126 +450,268 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // EXERCISE DATABASES FOR STANDARD SPLIT
-  const pushExercises = `
-    <div class="exercise-list">
-      <label class="exercise-item">
-        <input type="checkbox" class="workout-chk" data-name="Flat Bench Press">
-        <div class="exercise-info">
-          <span class="exercise-title">Flat Bench Press</span>
-          <span class="exercise-meta">4 Sets × 8-10 Reps (Chest Power)</span>
-        </div>
-      </label>
-      <label class="exercise-item">
-        <input type="checkbox" class="workout-chk" data-name="Dumbbell Shoulder Press">
-        <div class="exercise-info">
-          <span class="exercise-title">Dumbbell Shoulder Press</span>
-          <span class="exercise-meta">3 Sets × 10 Reps (Shoulders)</span>
-        </div>
-      </label>
-      <label class="exercise-item">
-        <input type="checkbox" class="workout-chk" data-name="Incline Dumbbell Flyes">
-        <div class="exercise-info">
-          <span class="exercise-title">Incline Dumbbell Flyes</span>
-          <span class="exercise-meta">3 Sets × 12 Reps (Upper Chest)</span>
-        </div>
-      </label>
-      <label class="exercise-item">
-        <input type="checkbox" class="workout-chk" data-name="Tricep Rope Pushdowns">
-        <div class="exercise-info">
-          <span class="exercise-title">Tricep Rope Pushdowns</span>
-          <span class="exercise-meta">3 Sets × 15 Reps (Triceps)</span>
-        </div>
-      </label>
-      <label class="exercise-item">
-        <input type="checkbox" class="workout-chk" data-name="Lateral Deltoid Raises">
-        <div class="exercise-info">
-          <span class="exercise-title">Lateral Deltoid Raises</span>
-          <span class="exercise-meta">4 Sets × 15 Reps (Shoulder Width)</span>
-        </div>
-      </label>
-    </div>
-  `;
-
-  const pullExercises = `
-    <div class="exercise-list">
-      <label class="exercise-item">
-        <input type="checkbox" class="workout-chk" data-name="Conventional Deadlifts">
-        <div class="exercise-info">
-          <span class="exercise-title">Conventional Barbell Deadlifts</span>
-          <span class="exercise-meta">3 Sets × 5 Reps (Posterior Chain)</span>
-        </div>
-      </label>
-      <label class="exercise-item">
-        <input type="checkbox" class="workout-chk" data-name="Bent Over Barbell Rows">
-        <div class="exercise-info">
-          <span class="exercise-title">Bent Over Barbell Rows</span>
-          <span class="exercise-meta">4 Sets × 8 Reps (Back Thickness)</span>
-        </div>
-      </label>
-      <label class="exercise-item">
-        <input type="checkbox" class="workout-chk" data-name="Lat Pulldowns">
-        <div class="exercise-info">
-          <span class="exercise-title">Lat Pulldowns (Wide Grip)</span>
-          <span class="exercise-meta">3 Sets × 10-12 Reps (Lats Width)</span>
-        </div>
-      </label>
-      <label class="exercise-item">
-        <input type="checkbox" class="workout-chk" data-name="Barbell Bicep Curls">
-        <div class="exercise-info">
-          <span class="exercise-title">Barbell Bicep Curls</span>
-          <span class="exercise-meta">3 Sets × 10 Reps (Biceps Peak)</span>
-        </div>
-      </label>
-      <label class="exercise-item">
-        <input type="checkbox" class="workout-chk" data-name="Dumbbell Hammer Curls">
-        <div class="exercise-info">
-          <span class="exercise-title">Dumbbell Hammer Curls</span>
-          <span class="exercise-meta">3 Sets × 12 Reps (Forearms/Biceps)</span>
-        </div>
-      </label>
-    </div>
-  `;
-
-  const legsExercises = `
-    <div class="exercise-list">
-      <label class="exercise-item">
-        <input type="checkbox" class="workout-chk" data-name="Barbell Back Squats">
-        <div class="exercise-info">
-          <span class="exercise-title">Barbell Back Squats</span>
-          <span class="exercise-meta">4 Sets × 8 Reps (Leg Mass)</span>
-        </div>
-      </label>
-      <label class="exercise-item">
-        <input type="checkbox" class="workout-chk" data-name="Romanian Deadlifts">
-        <div class="exercise-info">
-          <span class="exercise-title">Dumbbell Romanian Deadlifts</span>
-          <span class="exercise-meta">3 Sets × 10 Reps (Hamstrings/Glutes)</span>
-        </div>
-      </label>
-      <label class="exercise-item">
-        <input type="checkbox" class="workout-chk" data-name="Leg Press">
-        <div class="exercise-info">
-          <span class="exercise-title">Leg Press (Plates Loaded)</span>
-          <span class="exercise-meta">3 Sets × 12 Reps (Quads Focus)</span>
-        </div>
-      </label>
-      <label class="exercise-item">
-        <input type="checkbox" class="workout-chk" data-name="Standing Calf Raises">
-        <div class="exercise-info">
-          <span class="exercise-title">Standing Calf Raises</span>
-          <span class="exercise-meta">4 Sets × 15 Reps (Calves)</span>
-        </div>
-      </label>
-      <label class="exercise-item">
-        <input type="checkbox" class="workout-chk" data-name="Hanging Knee Raises">
-        <div class="exercise-info">
-          <span class="exercise-title">Hanging Knee Raises</span>
-          <span class="exercise-meta">3 Sets × 15 Reps (Core Strength)</span>
-        </div>
-      </label>
-    </div>
-  `;
+  // EXERCISE DATABASES FOR 7-DAY SPLIT
+  const dayExercises = {
+    1: `
+      <div class="exercise-list">
+        <label class="exercise-item">
+          <input type="checkbox" class="workout-chk" data-name="Flat Barbell Bench Press">
+          <div class="exercise-info">
+            <span class="exercise-title">Flat Barbell Bench Press</span>
+            <span class="exercise-meta">4 Sets × 8-10 Reps (Chest Power)</span>
+          </div>
+        </label>
+        <label class="exercise-item">
+          <input type="checkbox" class="workout-chk" data-name="Incline Dumbbell Press">
+          <div class="exercise-info">
+            <span class="exercise-title">Incline Dumbbell Press</span>
+            <span class="exercise-meta">3 Sets × 10 Reps (Upper Chest)</span>
+          </div>
+        </label>
+        <label class="exercise-item">
+          <input type="checkbox" class="workout-chk" data-name="Overhead Dumbbell Extension">
+          <div class="exercise-info">
+            <span class="exercise-title">Overhead Dumbbell Extension</span>
+            <span class="exercise-meta">3 Sets × 12 Reps (Triceps Long Head)</span>
+          </div>
+        </label>
+        <label class="exercise-item">
+          <input type="checkbox" class="workout-chk" data-name="Lateral Raises">
+          <div class="exercise-info">
+            <span class="exercise-title">Lateral Raises</span>
+            <span class="exercise-meta">4 Sets × 15 Reps (Side Delts)</span>
+          </div>
+        </label>
+        <label class="exercise-item">
+          <input type="checkbox" class="workout-chk" data-name="Tricep Rope Pushdown">
+          <div class="exercise-info">
+            <span class="exercise-title">Tricep Rope Pushdown</span>
+            <span class="exercise-meta">3 Sets × 15 Reps (Triceps Lateral Head)</span>
+          </div>
+        </label>
+      </div>
+    `,
+    2: `
+      <div class="exercise-list">
+        <label class="exercise-item">
+          <input type="checkbox" class="workout-chk" data-name="Conventional Deadlift">
+          <div class="exercise-info">
+            <span class="exercise-title">Conventional Deadlift</span>
+            <span class="exercise-meta">3 Sets × 5 Reps (Posterior Chain)</span>
+          </div>
+        </label>
+        <label class="exercise-item">
+          <input type="checkbox" class="workout-chk" data-name="Lat Pulldowns">
+          <div class="exercise-info">
+            <span class="exercise-title">Lat Pulldowns</span>
+            <span class="exercise-meta">3 Sets × 10 Reps (Back Width)</span>
+          </div>
+        </label>
+        <label class="exercise-item">
+          <input type="checkbox" class="workout-chk" data-name="Chest-Supported Rows">
+          <div class="exercise-info">
+            <span class="exercise-title">Chest-Supported Rows</span>
+            <span class="exercise-meta">3 Sets × 12 Reps (Mid-Back Thickness)</span>
+          </div>
+        </label>
+        <label class="exercise-item">
+          <input type="checkbox" class="workout-chk" data-name="Barbell Bicep Curls">
+          <div class="exercise-info">
+            <span class="exercise-title">Barbell Bicep Curls</span>
+            <span class="exercise-meta">3 Sets × 10 Reps (Biceps Peak)</span>
+          </div>
+        </label>
+        <label class="exercise-item">
+          <input type="checkbox" class="workout-chk" data-name="Hammer Curls">
+          <div class="exercise-info">
+            <span class="exercise-title">Hammer Curls</span>
+            <span class="exercise-meta">3 Sets × 12 Reps (Forearms/Biceps)</span>
+          </div>
+        </label>
+      </div>
+    `,
+    3: `
+      <div class="exercise-list">
+        <label class="exercise-item">
+          <input type="checkbox" class="workout-chk" data-name="Barbell Back Squats">
+          <div class="exercise-info">
+            <span class="exercise-title">Barbell Back Squats</span>
+            <span class="exercise-meta">4 Sets × 8 Reps (Quads/Glutes Power)</span>
+          </div>
+        </label>
+        <label class="exercise-item">
+          <input type="checkbox" class="workout-chk" data-name="Leg Press">
+          <div class="exercise-info">
+            <span class="exercise-title">Leg Press</span>
+            <span class="exercise-meta">3 Sets × 12 Reps (Quad Focus)</span>
+          </div>
+        </label>
+        <label class="exercise-item">
+          <input type="checkbox" class="workout-chk" data-name="Leg Extensions">
+          <div class="exercise-info">
+            <span class="exercise-title">Leg Extensions</span>
+            <span class="exercise-meta">3 Sets × 15 Reps (Quad Burner)</span>
+          </div>
+        </label>
+        <label class="exercise-item">
+          <input type="checkbox" class="workout-chk" data-name="Standing Calf Raises">
+          <div class="exercise-info">
+            <span class="exercise-title">Standing Calf Raises</span>
+            <span class="exercise-meta">4 Sets × 15 Reps (Calves)</span>
+          </div>
+        </label>
+        <label class="exercise-item">
+          <input type="checkbox" class="workout-chk" data-name="Hanging Knee Raises">
+          <div class="exercise-info">
+            <span class="exercise-title">Hanging Knee Raises</span>
+            <span class="exercise-meta">3 Sets × 15 Reps (Abs/Core)</span>
+          </div>
+        </label>
+      </div>
+    `,
+    4: `
+      <div class="exercise-list">
+        <label class="exercise-item">
+          <input type="checkbox" class="workout-chk" data-name="Low-Intensity Cardio">
+          <div class="exercise-info">
+            <span class="exercise-title">Low-Intensity Cardio</span>
+            <span class="exercise-meta">30 mins Jog/Cycle (Active Recovery)</span>
+          </div>
+        </label>
+        <label class="exercise-item">
+          <input type="checkbox" class="workout-chk" data-name="Planks Hold">
+          <div class="exercise-info">
+            <span class="exercise-title">Planks Hold</span>
+            <span class="exercise-meta">3 Sets × 60 Sec Hold (Core Stability)</span>
+          </div>
+        </label>
+        <label class="exercise-item">
+          <input type="checkbox" class="workout-chk" data-name="Russian Twists">
+          <div class="exercise-info">
+            <span class="exercise-title">Russian Twists</span>
+            <span class="exercise-meta">3 Sets × 20 Reps (Obliques)</span>
+          </div>
+        </label>
+        <label class="exercise-item">
+          <input type="checkbox" class="workout-chk" data-name="Bicycle Crunches">
+          <div class="exercise-info">
+            <span class="exercise-title">Bicycle Crunches</span>
+            <span class="exercise-meta">3 Sets × 15 Reps (Abs)</span>
+          </div>
+        </label>
+        <label class="exercise-item">
+          <input type="checkbox" class="workout-chk" data-name="Mobility & Stretching">
+          <div class="exercise-info">
+            <span class="exercise-title">Mobility & Stretching</span>
+            <span class="exercise-meta">15 mins Full Body Mobility Flow</span>
+          </div>
+        </label>
+      </div>
+    `,
+    5: `
+      <div class="exercise-list">
+        <label class="exercise-item">
+          <input type="checkbox" class="workout-chk" data-name="Overhead Barbell Press">
+          <div class="exercise-info">
+            <span class="exercise-title">Overhead Barbell Press</span>
+            <span class="exercise-meta">4 Sets × 8 Reps (Shoulder Power)</span>
+          </div>
+        </label>
+        <label class="exercise-item">
+          <input type="checkbox" class="workout-chk" data-name="Pull-ups / Chin-ups">
+          <div class="exercise-info">
+            <span class="exercise-title">Pull-ups / Chin-ups</span>
+            <span class="exercise-meta">3 Sets × Max Reps (Lats/Biceps)</span>
+          </div>
+        </label>
+        <label class="exercise-item">
+          <input type="checkbox" class="workout-chk" data-name="Dumbbell Bench Press">
+          <div class="exercise-info">
+            <span class="exercise-title">Dumbbell Bench Press</span>
+            <span class="exercise-meta">3 Sets × 10 Reps (Chest Volume)</span>
+          </div>
+        </label>
+        <label class="exercise-item">
+          <input type="checkbox" class="workout-chk" data-name="Cable Crossover Flyes">
+          <div class="exercise-info">
+            <span class="exercise-title">Cable Crossover Flyes</span>
+            <span class="exercise-meta">3 Sets × 12 Reps (Chest Squeeze)</span>
+          </div>
+        </label>
+        <label class="exercise-item">
+          <input type="checkbox" class="workout-chk" data-name="Face Pulls">
+          <div class="exercise-info">
+            <span class="exercise-title">Face Pulls</span>
+            <span class="exercise-meta">4 Sets × 15 Reps (Rear Delts/Posture)</span>
+          </div>
+        </label>
+      </div>
+    `,
+    6: `
+      <div class="exercise-list">
+        <label class="exercise-item">
+          <input type="checkbox" class="workout-chk" data-name="Romanian Deadlifts">
+          <div class="exercise-info">
+            <span class="exercise-title">Romanian Deadlifts</span>
+            <span class="exercise-meta">4 Sets × 10 Reps (Hamstrings/Glutes)</span>
+          </div>
+        </label>
+        <label class="exercise-item">
+          <input type="checkbox" class="workout-chk" data-name="Leg Curls">
+          <div class="exercise-info">
+            <span class="exercise-title">Leg Curls</span>
+            <span class="exercise-meta">3 Sets × 12 Reps (Hamstrings isolation)</span>
+          </div>
+        </label>
+        <label class="exercise-item">
+          <input type="checkbox" class="workout-chk" data-name="Dumbbell Walking Lunges">
+          <div class="exercise-info">
+            <span class="exercise-title">Dumbbell Walking Lunges</span>
+            <span class="exercise-meta">3 Sets × 12 Reps Per Leg (Leg Mass)</span>
+          </div>
+        </label>
+        <label class="exercise-item">
+          <input type="checkbox" class="workout-chk" data-name="Seated Calf Raises">
+          <div class="exercise-info">
+            <span class="exercise-title">Seated Calf Raises</span>
+            <span class="exercise-meta">4 Sets × 15 Reps (Calves)</span>
+          </div>
+        </label>
+        <label class="exercise-item">
+          <input type="checkbox" class="workout-chk" data-name="Ab Wheel Rollouts">
+          <div class="exercise-info">
+            <span class="exercise-title">Ab Wheel Rollouts</span>
+            <span class="exercise-meta">3 Sets × 10 Reps (Core Strength)</span>
+          </div>
+        </label>
+      </div>
+    `,
+    7: `
+      <div class="exercise-list">
+        <label class="exercise-item">
+          <input type="checkbox" class="workout-chk" data-name="Rest Day Walking">
+          <div class="exercise-info">
+            <span class="exercise-title">Active Recovery Walking</span>
+            <span class="exercise-meta">20-30 mins Light Walking</span>
+          </div>
+        </label>
+        <label class="exercise-item">
+          <input type="checkbox" class="workout-chk" data-name="Deep Stretching Routine">
+          <div class="exercise-info">
+            <span class="exercise-title">Deep Stretching Routine</span>
+            <span class="exercise-meta">20 mins Full Body Deep Static Stretch</span>
+          </div>
+        </label>
+        <label class="exercise-item">
+          <input type="checkbox" class="workout-chk" data-name="Hamstring & Hip Openers">
+          <div class="exercise-info">
+            <span class="exercise-title">Hamstring & Hip Openers</span>
+            <span class="exercise-meta">4 Rounds × 30 Sec Holds</span>
+          </div>
+        </label>
+      </div>
+    `
+  };
 
   // RENDER DETAILED PLANS IN DASHBOARD
   function renderPlanDetails(plan) {
@@ -544,17 +768,21 @@ document.addEventListener("DOMContentLoaded", () => {
       `;
     } else if (plan === "Standard") {
       detailsHtml = `
-        <h3 style="margin-bottom: 20px; font-weight: 900; color: var(--primary);">Standard Hypertrophy Workspace</h3>
+        <h3 style="margin-bottom: 20px; font-weight: 900; color: var(--primary);">7-Day Hypertrophy Workspace</h3>
         
-        <!-- SECTION 1: FULL STRENGTH SCHEDULE -->
+        <!-- SECTION 1: 7-DAY WORKOUT SPLIT -->
         <div style="border: 1px solid var(--border-color); padding: 20px; border-radius: 6px; margin-bottom: 25px;">
-          <h4 style="text-transform: uppercase; font-size: 15px; margin-bottom: 12px; color: var(--text-main); font-weight:800;">1. Full Strength Split</h4>
+          <h4 style="text-transform: uppercase; font-size: 15px; margin-bottom: 12px; color: var(--text-main); font-weight:800;">1. 7-Day Workout Split</h4>
           <p class="section-desc" style="text-align: left; margin: 0 0 15px; font-size: 13px;">Choose your workout split for today to track your exercises.</p>
           
-          <div class="schedule-tabs">
-            <button class="schedule-tab-btn active" onclick="switchWorkoutDay('push')">Day 1: Push (Chest/Shoulders/Triceps)</button>
-            <button class="schedule-tab-btn" onclick="switchWorkoutDay('pull')">Day 2: Pull (Back/Biceps)</button>
-            <button class="schedule-tab-btn" onclick="switchWorkoutDay('legs')">Day 3: Legs/Core</button>
+          <div class="schedule-tabs" style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <button class="schedule-tab-btn active" onclick="switchWorkoutDay(1)">Day 1: Push</button>
+            <button class="schedule-tab-btn" onclick="switchWorkoutDay(2)">Day 2: Pull</button>
+            <button class="schedule-tab-btn" onclick="switchWorkoutDay(3)">Day 3: Legs</button>
+            <button class="schedule-tab-btn" onclick="switchWorkoutDay(4)">Day 4: Cardio</button>
+            <button class="schedule-tab-btn" onclick="switchWorkoutDay(5)">Day 5: Upper</button>
+            <button class="schedule-tab-btn" onclick="switchWorkoutDay(6)">Day 6: Lower</button>
+            <button class="schedule-tab-btn" onclick="switchWorkoutDay(7)">Day 7: Rest</button>
           </div>
 
           <div class="workout-progress-wrapper" style="margin-top: 15px;">
@@ -733,7 +961,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Load initial data splits if standard plan is active
     if (plan === "Standard") {
-      switchWorkoutDay("push");
+      switchWorkoutDay(1);
       loadDietBlueprint("gain");
       window.weightLogs = []; // Reset logs upon new registration
     }
@@ -769,6 +997,7 @@ document.addEventListener("DOMContentLoaded", () => {
           item.classList.remove("completed");
         }
         calculateProgress();
+        syncUserProgress();
       });
     });
 
@@ -784,17 +1013,13 @@ document.addEventListener("DOMContentLoaded", () => {
     const btns = document.querySelectorAll(".schedule-tab-btn");
     btns.forEach(btn => {
       btn.classList.remove("active");
-      if (btn.getAttribute("onclick").includes(day)) {
+      if (btn.getAttribute("onclick") && btn.getAttribute("onclick").includes(day)) {
         btn.classList.add("active");
       }
     });
 
-    if (day === "push") {
-      container.innerHTML = pushExercises;
-    } else if (day === "pull") {
-      container.innerHTML = pullExercises;
-    } else if (day === "legs") {
-      container.innerHTML = legsExercises;
+    if (dayExercises[day]) {
+      container.innerHTML = dayExercises[day];
     }
 
     // Bind checkboxes listeners and recalculate progress bar
@@ -901,6 +1126,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const activeBmi = window.userBMI ? `${window.userBMI} (${window.userBMIStatus})` : "Not Calculated";
       logBmi.innerHTML = `${activeBmi}<br><span style="font-size: 11px; color:var(--text-muted); font-weight:500;">Last Weight Logged: ${logEntry.weight}</span>`;
     }
+    syncUserProgress();
   };
 
   function renderWeightLogTable() {
@@ -927,6 +1153,17 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
+    if (!window.trainerQueries) {
+      window.trainerQueries = [];
+    }
+    window.trainerQueries.push({
+      date: new Date().toLocaleDateString() + " " + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      query: query
+    });
+
+    document.getElementById("trainerQueryText").value = "";
+    syncUserProgress();
+
     const userName = window.registeredName || "FitLife Athlete";
     const userEmail = window.registeredEmail || "Not Provided";
     const userPlan = window.registeredPlan || "Standard";
@@ -944,6 +1181,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const emailUrl = `mailto:sameerkhan637477@gmail.com?subject=${subject}&body=${body}`;
     window.location.href = emailUrl;
+    alert("Your support query has been logged! Redirecting to mail app...");
   };
 
   // CALORIE BURNED CALCULATOR
@@ -1043,6 +1281,186 @@ document.addEventListener("DOMContentLoaded", () => {
       // Scroll to Home
       showSection("home");
     }
+  };
+
+  // ADMIN PORTAL FUNCTIONS
+  window.openAdminLogin = function() {
+    document.getElementById("adminPasscode").value = "";
+    document.getElementById("adminLoginModal").style.display = "flex";
+  };
+
+  window.closeAdminLogin = function() {
+    document.getElementById("adminLoginModal").style.display = "none";
+  };
+
+  window.closeAdminDashboard = function() {
+    document.getElementById("adminDashboard").style.display = "none";
+    document.querySelectorAll(".landing-section").forEach(sec => {
+      sec.style.display = "block";
+    });
+    formSection.style.display = "flex";
+    showSection("home");
+  };
+
+  const adminLoginForm = document.getElementById("adminLoginForm");
+  if (adminLoginForm) {
+    adminLoginForm.addEventListener("submit", function(e) {
+      e.preventDefault();
+      const passcode = document.getElementById("adminPasscode").value;
+
+      if (passcode === "admin123") {
+        closeAdminLogin();
+        dashboard.style.display = "none";
+        document.querySelectorAll(".landing-section").forEach(sec => {
+          sec.style.display = "none";
+        });
+        formSection.style.display = "none";
+        
+        document.getElementById("adminDashboard").style.display = "block";
+        document.getElementById("adminDashboard").scrollIntoView({ behavior: "smooth" });
+
+        fetchAdminData();
+      } else {
+        alert("Incorrect administrator passcode. Access Denied.");
+      }
+    });
+  }
+
+  window.allUsersData = {}; 
+
+  window.fetchAdminData = function() {
+    const tableBody = document.getElementById("adminUserTableBody");
+    tableBody.innerHTML = `<tr><td colspan="9" style="text-align: center; padding: 20px;">Fetching logs in real-time...</td></tr>`;
+
+    if (db) {
+      db.ref("users").once("value").then((snapshot) => {
+        const data = snapshot.val();
+        if (data) {
+          window.allUsersData = data;
+          renderAdminUsers(data);
+        } else {
+          tableBody.innerHTML = `<tr><td colspan="9" style="text-align: center; padding: 20px; color: var(--text-muted);">No users registered in database yet.</td></tr>`;
+        }
+      }).catch(err => {
+        console.error("Database fetch failed, loading local logs:", err);
+        loadLocalFallbackAdmin();
+      });
+    } else {
+      loadLocalFallbackAdmin();
+    }
+  };
+
+  function loadLocalFallbackAdmin() {
+    const tableBody = document.getElementById("adminUserTableBody");
+    const localData = localStorage.getItem("fitlife_current_user");
+    if (localData) {
+      const parsed = JSON.parse(localData);
+      window.allUsersData = { "local_session": parsed };
+      renderAdminUsers(window.allUsersData);
+    } else {
+      tableBody.innerHTML = `<tr><td colspan="9" style="text-align: center; padding: 20px; color: var(--text-muted);">Database offline. No local session users logged.</td></tr>`;
+    }
+  }
+
+  function renderAdminUsers(usersObject) {
+    const tableBody = document.getElementById("adminUserTableBody");
+    if (!usersObject || Object.keys(usersObject).length === 0) {
+      tableBody.innerHTML = `<tr><td colspan="9" style="text-align: center; padding: 20px; color: var(--text-muted);">No logs to display.</td></tr>`;
+      return;
+    }
+
+    let rowsHtml = "";
+    Object.keys(usersObject).forEach(key => {
+      const u = usersObject[key];
+      const pCount = u.completedExercisesCount || 0;
+      const tCount = u.totalExercisesCount || 0;
+      const progressPercent = tCount > 0 ? Math.round((pCount / tCount) * 100) : 0;
+      const weightText = u.weightLogs && u.weightLogs.length > 0 ? u.weightLogs[0].weight : "N/A";
+      const utrText = u.txnRefId || "N/A";
+      const waterText = `${u.waterCount || 0} / ${u.waterTarget || 8} Cups`;
+
+      rowsHtml += `
+        <tr>
+          <td>${u.registrationDate || "N/A"}</td>
+          <td style="font-weight: 700; color: white;">${u.name}</td>
+          <td>${u.email}</td>
+          <td><span class="plan-badge">${u.plan || "Free"}</span></td>
+          <td style="font-family: monospace; color: var(--primary); font-weight:700;">${utrText}</td>
+          <td>${waterText}</td>
+          <td>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 11px; font-weight:700;">${progressPercent}%</span>
+              <div class="progress-bar-bg" style="width: 60px; height: 4px; display: inline-block;">
+                <div class="progress-bar-fill" style="width: ${progressPercent}%; height: 100%;"></div>
+              </div>
+            </div>
+          </td>
+          <td style="color: var(--primary); font-weight:700;">${weightText}</td>
+          <td><button class="admin-btn-detail" onclick="viewAdminUserDetail('${key}')">Detail</button></td>
+        </tr>
+      `;
+    });
+
+    tableBody.innerHTML = rowsHtml;
+  }
+
+  window.viewAdminUserDetail = function(key) {
+    const u = window.allUsersData[key];
+    if (!u) return;
+
+    document.getElementById("adminUserDetailBox").style.display = "block";
+    document.getElementById("detailUserName").textContent = `${u.name}'s Training Dossier`;
+    document.getElementById("detailUserPlan").textContent = `${u.plan || "Free"} Plan`;
+    document.getElementById("detailUserWeight").textContent = u.weightLogs && u.weightLogs.length > 0 ? u.weightLogs[0].weight : "No entry";
+    document.getElementById("detailUserWater").textContent = `${u.waterCount || 0} / ${u.waterTarget || 8} Cups`;
+    
+    const pCount = u.completedExercisesCount || 0;
+    const tCount = u.totalExercisesCount || 0;
+    const pct = tCount > 0 ? Math.round((pCount / tCount) * 100) : 0;
+    document.getElementById("detailUserChecklist").textContent = `${pCount} of ${tCount} (${pct}%)`;
+
+    // Render Weight History Table
+    const weightTableBody = document.getElementById("detailUserWeightTableBody");
+    if (u.weightLogs && u.weightLogs.length > 0) {
+      weightTableBody.innerHTML = u.weightLogs.map(w => `
+        <tr>
+          <td>${w.date}</td>
+          <td style="color: var(--primary); font-weight:700;">${w.weight}</td>
+        </tr>
+      `).join("");
+    } else {
+      weightTableBody.innerHTML = `<tr><td colspan="2" style="text-align: center; color: var(--text-muted);">No weight history.</td></tr>`;
+    }
+
+    // Render Queries List
+    const queriesContainer = document.getElementById("detailUserQueries");
+    if (u.queries && u.queries.length > 0) {
+      queriesContainer.innerHTML = u.queries.map(q => `
+        <div class="admin-query-row" style="margin-bottom: 8px;">
+          <div class="admin-query-date">${q.date}</div>
+          <div class="admin-query-text">"${q.query}"</div>
+        </div>
+      `).join("");
+    } else {
+      queriesContainer.innerHTML = `<p style="color: var(--text-muted); font-size: 12px; text-align: center;">No support messages sent.</p>`;
+    }
+
+    document.getElementById("adminUserDetailBox").scrollIntoView({ behavior: "smooth" });
+  };
+
+  window.filterAdminUsers = function() {
+    const searchVal = document.getElementById("adminSearchInput").value.trim().toLowerCase();
+    if (!window.allUsersData || Object.keys(window.allUsersData).length === 0) return;
+
+    const filtered = {};
+    Object.keys(window.allUsersData).forEach(key => {
+      const u = window.allUsersData[key];
+      if (u.name.toLowerCase().includes(searchVal) || u.email.toLowerCase().includes(searchVal)) {
+        filtered[key] = u;
+      }
+    });
+
+    renderAdminUsers(filtered);
   };
 });
 
