@@ -369,48 +369,71 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // Check if user already exists in Firestore (Returning User auto-login)
+    // Check if user already exists in Firestore (Returning User auto-login / Upgrade route)
     if (typeof window.dbGetUser === 'function') {
       try {
         const existingUser = await window.dbGetUser(email);
         if (existingUser) {
-          if (existingUser.paymentStatus === "Rejected") {
-            alert("Your Standard Plan payment verification was rejected by admin. Loading Free Plan instead.");
-            existingUser.plan = "Free";
-            existingUser.activePlan = "Free";
+          // If Free in DB but user selected Standard, we proceed to payment screen to allow upgrade!
+          const isUpgrading = (existingUser.plan === "Free" && plan === "Standard");
+
+          if (!isUpgrading) {
+            if (existingUser.paymentStatus === "Rejected") {
+              alert("Your Standard Plan payment verification was rejected by admin. Loading Free Plan instead.");
+              existingUser.plan = "Free";
+              existingUser.activePlan = "Free";
+            }
+            
+            alert("Welcome back! Loading your existing profile...");
+
+            // Restore credentials and progress
+            window.registeredName = existingUser.name || name;
+            window.registeredEmail = existingUser.email || email;
+            window.registeredPlan = existingUser.activePlan || existingUser.plan || plan;
+            window.registrationDate = existingUser.registrationDate;
+            window.txnRefId = existingUser.txnRefId || "N/A";
+            window.userWaterCount = existingUser.waterCount || 0;
+            window.userWaterTarget = existingUser.waterTarget || 8;
+            window.weightLogs = existingUser.weightLogs || [];
+            window.trainerQueries = existingUser.queries || [];
+            window.completedExercisesCount = existingUser.completedExercisesCount || 0;
+            window.totalExercisesCount = existingUser.totalExercisesCount || (existingUser.plan === "Free" ? 4 : 33);
+            window.completedExercisesList = existingUser.completedExercisesList || [];
+            window.selectedFitnessGoal = existingUser.fitnessGoal || "gain";
+
+            // Sync local water variable
+            waterCount = window.userWaterCount;
+
+            // Update last login in database
+            if (typeof window.dbUpdateUserStatus === 'function') {
+              window.dbUpdateUserStatus(existingUser.email, { lastLogin: new Date().toISOString() });
+            }
+
+            // Unlock dashboard
+            unlockDashboardUI(window.registeredName, window.registeredEmail, window.registeredPlan);
+
+            // Update UI components
+            updateWaterUI();
+            renderWeightLogTable();
+            window.loadDietBlueprint(window.selectedFitnessGoal, false);
+            return;
+          } else {
+            // Upgrading flow: load past stats (like weightLogs, water, queries) so they aren't lost
+            window.registeredName = existingUser.name || name;
+            window.registeredEmail = existingUser.email || email;
+            window.registeredPlan = "Standard";
+            window.registrationDate = existingUser.registrationDate;
+            window.userWaterCount = existingUser.waterCount || 0;
+            window.userWaterTarget = existingUser.waterTarget || 8;
+            window.weightLogs = existingUser.weightLogs || [];
+            window.trainerQueries = existingUser.queries || [];
+            window.completedExercisesCount = existingUser.completedExercisesCount || 0;
+            window.totalExercisesCount = 33;
+            window.completedExercisesList = existingUser.completedExercisesList || [];
+            window.selectedFitnessGoal = existingUser.fitnessGoal || "gain";
+            
+            waterCount = window.userWaterCount;
           }
-          
-          alert("Welcome back! Loading your existing profile...");
-
-          // Restore credentials and progress
-          window.registeredName = existingUser.name || name;
-          window.registeredEmail = existingUser.email || email;
-          window.registeredPlan = existingUser.activePlan || existingUser.plan || plan;
-          window.registrationDate = existingUser.registrationDate;
-          window.txnRefId = existingUser.txnRefId || "N/A";
-          window.userWaterCount = existingUser.waterCount || 0;
-          window.userWaterTarget = existingUser.waterTarget || 8;
-          window.weightLogs = existingUser.weightLogs || [];
-          window.trainerQueries = existingUser.queries || [];
-          window.completedExercisesCount = existingUser.completedExercisesCount || 0;
-          window.totalExercisesCount = existingUser.totalExercisesCount || (existingUser.plan === "Free" ? 4 : 33);
-          window.completedExercisesList = existingUser.completedExercisesList || [];
-
-          // Sync local water variable
-          waterCount = window.userWaterCount;
-
-          // Update last login in database
-          if (typeof window.dbUpdateUserStatus === 'function') {
-            window.dbUpdateUserStatus(existingUser.email, { lastLogin: new Date().toISOString() });
-          }
-
-          // Unlock dashboard
-          unlockDashboardUI(window.registeredName, window.registeredEmail, window.registeredPlan);
-
-          // Update UI components
-          updateWaterUI();
-          renderWeightLogTable();
-          return;
         }
       } catch (err) {
         console.error("Error checking returning user:", err);
@@ -457,6 +480,11 @@ document.addEventListener("DOMContentLoaded", () => {
     // Show Dashboard
     dashboard.style.display = "block";
     window.scrollTo({ top: 0, behavior: "smooth" });
+
+    // Populate onboarding form inputs for easy future modifications/upgrades
+    document.getElementById("name").value = name;
+    document.getElementById("email").value = email;
+    document.getElementById("plan").value = plan;
 
     // Populate user details in header
     document.getElementById("userAvatar").textContent = name.charAt(0).toUpperCase();
@@ -1448,6 +1476,9 @@ document.addEventListener("DOMContentLoaded", () => {
   window.logoutDashboard = function() {
     if (confirm("Are you sure you want to exit your dashboard? Your active workout progress will be reset.")) {
       dashboard.style.display = "none";
+      
+      // Clear local session storage
+      localStorage.removeItem("fitlife_current_user");
       
       // Clear form
       userForm.reset();
