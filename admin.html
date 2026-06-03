@@ -138,19 +138,64 @@
             <th style="padding: 15px; background: #18181b;">Register Date</th>
             <th style="padding: 15px; background: #18181b;">Name</th>
             <th style="padding: 15px; background: #18181b;">Email</th>
-            <th style="padding: 15px; background: #18181b;">Plan</th>
+            <th style="padding: 15px; background: #18181b;">Selected Plan</th>
+            <th style="padding: 15px; background: #18181b;">Active Plan</th>
             <th style="padding: 15px; background: #18181b;">Transaction ID</th>
             <th style="padding: 15px; background: #18181b;">Payment Status</th>
             <th style="padding: 15px; background: #18181b;">Checklist</th>
+            <th style="padding: 15px; background: #18181b;">Last Login</th>
             <th style="padding: 15px; background: #18181b; text-align: center;">Action</th>
           </tr>
         </thead>
         <tbody id="adminUserTable">
           <tr>
-            <td colspan="8" style="text-align: center; padding: 30px; color: var(--text-muted);">Database is loading records...</td>
+            <td colspan="10" style="text-align: center; padding: 30px; color: var(--text-muted);">Database is loading records...</td>
           </tr>
         </tbody>
       </table>
+    </div>
+
+    <!-- USER DETAIL MODAL -->
+    <div id="userDetailModal" class="admin-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); justify-content: center; align-items: center; z-index: 1000;">
+      <div class="admin-modal-content" style="max-width: 600px; width: 90%; background: #0c0c0e; border: 1px solid var(--border-color); border-radius: 8px; padding: 25px; text-align: left; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; margin-bottom: 20px;">
+          <h3 id="detailUserName" style="margin: 0; color: var(--primary); font-size: 20px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px;">User Dossier</h3>
+          <button onclick="closeDetailModal()" style="background: none; border: none; color: white; font-size: 24px; cursor: pointer; line-height: 1;">&times;</button>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px;">
+          <div class="stat-box" style="padding: 12px; background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.03); border-radius: 4px;">
+            <span style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">Active Plan</span>
+            <span id="detailUserPlan" style="font-weight: 800; display: block; font-size: 15px; color: white; margin-top: 5px;">--</span>
+          </div>
+          <div class="stat-box" style="padding: 12px; background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.03); border-radius: 4px;">
+            <span style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">Hydration Log</span>
+            <span id="detailUserWater" style="font-weight: 800; display: block; font-size: 15px; color: white; margin-top: 5px;">--</span>
+          </div>
+        </div>
+
+        <!-- Weight History Table -->
+        <h4 style="margin-bottom: 10px; text-transform: uppercase; font-size: 11px; color: var(--text-muted); font-weight: 800; letter-spacing: 0.5px;">Weight Log History</h4>
+        <div style="max-height: 150px; overflow-y: auto; background: #040405; border: 1px solid var(--border-color); border-radius: 4px; padding: 12px; margin-bottom: 25px;">
+          <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+            <thead>
+              <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); color: var(--text-muted);">
+                <th style="padding: 8px; text-align: left; font-weight: 700;">Date</th>
+                <th style="padding: 8px; text-align: right; font-weight: 700;">Weight</th>
+              </tr>
+            </thead>
+            <tbody id="detailWeightTable">
+              <tr><td colspan="2" style="text-align: center; color: var(--text-muted); padding: 8px;">No entries logged yet.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Support Queries -->
+        <h4 style="margin-bottom: 10px; text-transform: uppercase; font-size: 11px; color: var(--text-muted); font-weight: 800; letter-spacing: 0.5px;">Coach Queries</h4>
+        <div id="detailQueriesContainer" style="max-height: 150px; overflow-y: auto; background: #040405; border: 1px solid var(--border-color); border-radius: 4px; padding: 12px; font-size: 13px; color: var(--text-main);">
+          <p style="text-align: center; color: var(--text-muted); margin: 0; padding: 10px;">No support queries sent yet.</p>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -177,7 +222,7 @@
     // Reload users data
     async function reloadLogs() {
       const table = document.getElementById("adminUserTable");
-      table.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 30px;">Loading users in real-time...</td></tr>`;
+      table.innerHTML = `<tr><td colspan="10" style="text-align: center; padding: 30px;">Loading users in real-time...</td></tr>`;
       
       if (typeof dbGetAllUsers === 'function') {
         const users = await dbGetAllUsers();
@@ -185,7 +230,7 @@
         renderUsers(users);
         updateStats(users);
       } else {
-        table.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 30px; color: var(--primary);">Firebase connection modules not loaded correctly. Check browser console.</td></tr>`;
+        table.innerHTML = `<tr><td colspan="10" style="text-align: center; padding: 30px; color: var(--primary);">Firebase connection modules not loaded correctly. Check browser console.</td></tr>`;
       }
     }
 
@@ -223,15 +268,16 @@
 
         return `
           <tr>
-            <td style="padding: 14px 15px;">${u.registrationDate || "N/A"}</td>
-            <td style="padding: 14px 15px; font-weight:700; color: white;">${u.name}</td>
+            <td style="padding: 14px 15px; white-space: nowrap;">${u.registrationDate || "N/A"}</td>
+            <td style="padding: 14px 15px; font-weight:700; color: white; white-space: nowrap;">${u.name}</td>
             <td style="padding: 14px 15px;">${u.email}</td>
             <td style="padding: 14px 15px;">
-              <select onchange="triggerPlanChange('${u.email}', this.value)" style="background: #111; border: 1px solid var(--border-color); color: white; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px;">
+              <select onchange="triggerPlanChange('${u.email}', this.value)" style="background: #111; border: 1px solid var(--border-color); color: white; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px; outline: none;">
                 <option value="Free" ${u.plan === 'Free' ? 'selected' : ''}>Free</option>
                 <option value="Standard" ${u.plan === 'Standard' ? 'selected' : ''}>Standard</option>
               </select>
             </td>
+            <td style="padding: 14px 15px;"><span class="plan-badge">${u.activePlan || u.plan || 'Free'}</span></td>
             <td style="padding: 14px 15px; font-family:monospace; color: var(--primary); font-weight:700;">${u.txnRefId || u.transactionId || "N/A"}</td>
             <td style="padding: 14px 15px;"><span class="status-badge ${statusClass}">${statusLabel}</span></td>
             <td style="padding: 14px 15px;">
@@ -242,7 +288,9 @@
                 </div>
               </div>
             </td>
+            <td style="padding: 14px 15px; font-size: 12px; white-space: nowrap;">${u.lastLogin ? new Date(u.lastLogin).toLocaleString() : "N/A"}</td>
             <td style="padding: 14px 15px; text-align: center; white-space: nowrap;">
+              <button onclick="viewUserDetails('${u.email}')" style="background:#555; border:none; color:white; padding:6px 10px; font-size:11px; font-weight:700; border-radius:4px; cursor:pointer; text-transform:uppercase; margin-right:5px;">Detail</button>
               ${actionButtonsHtml}
               <button class="admin-btn-delete" onclick="triggerDelete('${u.email}')">Delete</button>
             </td>
@@ -313,7 +361,7 @@
       if (confirm(`Change plan for ${email} to ${newPlan}?`)) {
         if (typeof dbUpdateUserStatus === 'function') {
           const statusUpdate = newPlan === "Free" ? "Verified" : "Pending Verification";
-          const success = await dbUpdateUserStatus(email, { plan: newPlan, paymentStatus: statusUpdate });
+          const success = await dbUpdateUserStatus(email, { plan: newPlan, activePlan: newPlan, paymentStatus: statusUpdate });
           if (success) {
             alert(`Plan updated to ${newPlan}.`);
             reloadLogs();
@@ -325,6 +373,50 @@
         reloadLogs();
       }
     }
+
+    // View Detailed dossiers
+    window.viewUserDetails = function(email) {
+      const u = cachedUsers.find(user => user.email === email);
+      if (!u) return;
+
+      document.getElementById("detailUserName").textContent = `${u.name}'s Profile Dossier`;
+      document.getElementById("detailUserPlan").textContent = `${u.activePlan || u.plan || 'Free'} Plan (${u.paymentStatus || 'Verified'})`;
+      
+      const waterPct = u.waterTarget > 0 ? Math.min((u.waterCount / u.waterTarget) * 100, 100) : 0;
+      document.getElementById("detailUserWater").textContent = `${u.waterCount || 0} / ${u.waterTarget || 8} Cups (${waterPct.toFixed(0)}%)`;
+
+      // Render weight logs
+      const weightTable = document.getElementById("detailWeightTable");
+      if (u.weightLogs && u.weightLogs.length > 0) {
+        weightTable.innerHTML = u.weightLogs.map(w => `
+          <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); color: var(--text-main);">
+            <td style="padding: 6px 8px; color: var(--text-muted);">${w.date}</td>
+            <td style="padding: 6px 8px; text-align: right; font-weight: 700; color: var(--primary);">${w.weight}</td>
+          </tr>
+        `).join("");
+      } else {
+        weightTable.innerHTML = `<tr><td colspan="2" style="text-align: center; color: var(--text-muted); padding: 8px;">No entries logged yet.</td></tr>`;
+      }
+
+      // Render queries
+      const queriesContainer = document.getElementById("detailQueriesContainer");
+      if (u.queries && u.queries.length > 0) {
+        queriesContainer.innerHTML = u.queries.map(q => `
+          <div style="background: rgba(255,255,255,0.02); padding: 8px; border: 1px solid rgba(255,255,255,0.05); border-radius: 4px; margin-bottom: 8px;">
+            <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 4px;">${q.date}</div>
+            <div style="font-weight: 600; color: white;">${q.query}</div>
+          </div>
+        `).join("");
+      } else {
+        queriesContainer.innerHTML = `<p style="text-align: center; color: var(--text-muted); margin: 0; padding: 10px;">No support queries sent yet.</p>`;
+      }
+
+      document.getElementById("userDetailModal").style.display = "flex";
+    };
+
+    window.closeDetailModal = function() {
+      document.getElementById("userDetailModal").style.display = "none";
+    };
 
     // Delete user
     async function triggerDelete(email) {
