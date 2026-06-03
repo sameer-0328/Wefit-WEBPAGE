@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FitLife | Admin Control Panel</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* Admin specific styles */
+    .admin-wrapper {
+      max-width: 1200px;
+      margin: 40px auto;
+      padding: 0 5%;
+      display: none; /* Hidden by default until authorized */
+    }
+    .status-badge {
+      display: inline-block;
+      padding: 4px 10px;
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      border-radius: 4px;
+    }
+    .status-badge.pending {
+      background: rgba(234, 179, 8, 0.1);
+      color: #eab308;
+      border: 1px solid #eab308;
+    }
+    .status-badge.verified {
+      background: rgba(34, 197, 94, 0.1);
+      color: #22c55e;
+      border: 1px solid #22c55e;
+    }
+    .admin-btn-delete {
+      background: var(--primary) !important;
+      color: white;
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 700;
+      border-radius: 4px;
+      cursor: pointer;
+      text-transform: uppercase;
+      border: none;
+      transition: var(--transition);
+    }
+    .admin-btn-delete:hover {
+      background: var(--primary-hover) !important;
+      transform: translateY(-2px);
+    }
+    .admin-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+    .stat-number {
+      font-size: 32px;
+      font-weight: 900;
+      color: var(--primary);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ADMIN NAVBAR -->
+  <nav>
+    <div class="logo-area">
+      <h2>FitLife Admin</h2>
+    </div>
+    <ul>
+      <li><a href="index.html" class="nav-cta" style="background:#2a2a2a;">Exit Portal</a></li>
+    </ul>
+  </nav>
+
+  <!-- PASSWORD MODAL (Fullscreen overlay) -->
+  <div id="adminAuthModal" class="admin-modal">
+    <div class="admin-modal-content" style="max-width: 420px; text-align: center;">
+      <h2>Admin Authorization</h2>
+      <p style="margin-bottom: 25px;">Enter passcode to unlock the athlete logs database.</p>
+      <form id="adminAuthForm">
+        <div class="form-group" style="margin-bottom: 20px;">
+          <input type="password" id="authPasscode" placeholder="Enter Passcode (admin123)" required style="width: 100%; padding: 12px; background: #000; border: 1px solid var(--border-color); color: white; border-radius: 4px; text-align: center; font-size: 15px;">
+        </div>
+        <button type="submit" style="width: 100%;">Authorize Access</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ADMIN MAIN WRAPPER -->
+  <div class="admin-wrapper" id="adminMainContent">
+    <div class="section-header" style="margin-bottom: 35px; text-align: left;">
+      <span class="section-tag">Database Control Panel</span>
+      <h2 style="text-align: left; font-size: 32px;">Registered Athletes</h2>
+      <p class="section-desc" style="margin: 5px 0 0; text-align: left;">Manage registered accounts, check transaction references, and track exercise progress.</p>
+    </div>
+
+    <!-- STATS COUNTER -->
+    <div class="admin-stats">
+      <div class="stat-box">
+        <span class="stat-title">Total Accounts</span>
+        <span class="stat-value stat-number" id="statTotal">0</span>
+      </div>
+      <div class="stat-box">
+        <span class="stat-title">Standard Paid Plan</span>
+        <span class="stat-value stat-number" id="statStandard">0</span>
+      </div>
+      <div class="stat-box">
+        <span class="stat-title">Free Plan</span>
+        <span class="stat-value" id="statFree" style="font-size: 32px; font-weight:900; color: var(--text-main);">0</span>
+      </div>
+      <div class="stat-box">
+        <span class="stat-title">Pending Verification</span>
+        <span class="stat-value" id="statPending" style="font-size: 32px; font-weight:900; color: #eab308;">0</span>
+      </div>
+    </div>
+
+    <!-- CONTROLS & SEARCH -->
+    <div style="display: flex; gap: 15px; margin-bottom: 25px; flex-wrap: wrap;">
+      <input type="text" id="adminSearch" placeholder="Search by name, email or transaction ID..." style="flex: 1; min-width: 250px; background: var(--bg-card); border: 1px solid var(--border-color); color: white; padding: 12px 16px; border-radius: 4px; font-size: 14px;" oninput="onSearchInput()">
+      <button onclick="reloadLogs()" class="btn" style="padding: 12px 24px; font-size: 14px;">🔄 Refresh Logs</button>
+    </div>
+
+    <!-- DATA TABLE -->
+    <div class="admin-table-wrapper" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; overflow-x: auto; margin-bottom: 40px;">
+      <table class="weight-log-table" style="width: 100%; border-collapse: collapse;">
+        <thead>
+          <tr>
+            <th style="padding: 15px; background: #18181b;">Register Date</th>
+            <th style="padding: 15px; background: #18181b;">Name</th>
+            <th style="padding: 15px; background: #18181b;">Email</th>
+            <th style="padding: 15px; background: #18181b;">Plan</th>
+            <th style="padding: 15px; background: #18181b;">Transaction ID</th>
+            <th style="padding: 15px; background: #18181b;">Payment Status</th>
+            <th style="padding: 15px; background: #18181b;">Checklist</th>
+            <th style="padding: 15px; background: #18181b; text-align: center;">Action</th>
+          </tr>
+        </thead>
+        <tbody id="adminUserTable">
+          <tr>
+            <td colspan="8" style="text-align: center; padding: 30px; color: var(--text-muted);">Database is loading records...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Firebase Scripts -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script src="firebase.js"></script>
+  <script>
+    let cachedUsers = [];
+
+    // Form passcode check
+    document.getElementById("adminAuthForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const code = document.getElementById("authPasscode").value;
+      if (code === "admin123") {
+        document.getElementById("adminAuthModal").style.display = "none";
+        document.getElementById("adminMainContent").style.display = "block";
+        reloadLogs();
+      } else {
+        alert("Incorrect passcode! Access denied.");
+      }
+    });
+
+    // Reload users data
+    async function reloadLogs() {
+      const table = document.getElementById("adminUserTable");
+      table.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 30px;">Loading users in real-time...</td></tr>`;
+      
+      if (typeof dbGetAllUsers === 'function') {
+        const users = await dbGetAllUsers();
+        cachedUsers = users;
+        renderUsers(users);
+        updateStats(users);
+      } else {
+        table.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 30px; color: var(--primary);">Firebase connection modules not loaded correctly. Check browser console.</td></tr>`;
+      }
+    }
+
+    // Render users list
+    function renderUsers(usersList) {
+      const table = document.getElementById("adminUserTable");
+      if (usersList.length === 0) {
+        table.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 30px; color: var(--text-muted);">No athlete records found matching query.</td></tr>`;
+        return;
+      }
+
+      table.innerHTML = usersList.map(u => {
+        const pCount = u.completedExercisesCount || 0;
+        const tCount = u.totalExercisesCount || 0;
+        const pct = tCount > 0 ? Math.round((pCount / tCount) * 100) : 0;
+        const statusClass = (u.paymentStatus === 'Verified' || u.plan === 'Free') ? 'verified' : 'pending';
+        const statusLabel = (u.paymentStatus === 'Verified' || u.plan === 'Free') ? 'Verified' : 'Pending Verification';
+
+        return `
+          <tr>
+            <td style="padding: 14px 15px;">${u.registrationDate || "N/A"}</td>
+            <td style="padding: 14px 15px; font-weight:700; color: white;">${u.name}</td>
+            <td style="padding: 14px 15px;">${u.email}</td>
+            <td style="padding: 14px 15px;"><span class="plan-badge">${u.plan}</span></td>
+            <td style="padding: 14px 15px; font-family:monospace; color: var(--primary); font-weight:700;">${u.txnRefId || "N/A"}</td>
+            <td style="padding: 14px 15px;"><span class="status-badge ${statusClass}">${statusLabel}</span></td>
+            <td style="padding: 14px 15px;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 11px; font-weight: 700;">${pct}%</span>
+                <div class="progress-bar-bg" style="width: 50px; height: 4px; margin:0;">
+                  <div class="progress-bar-fill" style="width: ${pct}%;"></div>
+                </div>
+              </div>
+            </td>
+            <td style="padding: 14px 15px; text-align: center;">
+              <button class="admin-btn-delete" onclick="triggerDelete('${u.email}')">Delete</button>
+            </td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    // Statistics updater
+    function updateStats(usersList) {
+      document.getElementById("statTotal").textContent = usersList.length;
+      document.getElementById("statStandard").textContent = usersList.filter(u => u.plan === 'Standard').length;
+      document.getElementById("statFree").textContent = usersList.filter(u => u.plan === 'Free').length;
+      document.getElementById("statPending").textContent = usersList.filter(u => u.plan !== 'Free' && u.paymentStatus !== 'Verified').length;
+    }
+
+    // Real-time search handler
+    function onSearchInput() {
+      const q = document.getElementById("adminSearch").value.toLowerCase().trim();
+      const filtered = cachedUsers.filter(u => 
+        u.name.toLowerCase().includes(q) || 
+        u.email.toLowerCase().includes(q) || 
+        (u.txnRefId && u.txnRefId.toLowerCase().includes(q))
+      );
+      renderUsers(filtered);
+    }
+
+    // Delete user
+    async function triggerDelete(email) {
+      if (confirm(`Are you sure you want to permanently delete athlete record: ${email}? This action is irreversible.`)) {
+        const deleted = await dbDeleteUser(email);
+        if (deleted) {
+          alert("Athlete record successfully deleted.");
+          reloadLogs();
+        } else {
+          alert("Failed to delete record. Check database credentials or console logs.");
+        }
+      }
+    }
+  </script>
+</body>
+</html>

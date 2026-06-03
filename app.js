@@ -1,30 +1,11 @@
 document.addEventListener("DOMContentLoaded", () => {
-  // FIREBASE CONFIGURATION & INITIALIZATION
-  // Replace the databaseURL value below with your Firebase Realtime Database URL
-  const firebaseConfig = {
-    databaseURL: "https://wefit-webpage-default-rtdb.firebaseio.com"
-  };
+  // Firebase configuration and Firestore operations are handled in firebase.js.
+  // We can use window.dbSaveUser, window.dbGetUser, window.dbGetAllUsers directly.
 
-  let db = null;
-  try {
-    if (typeof firebase !== 'undefined' && firebaseConfig.databaseURL && !firebaseConfig.databaseURL.includes("<your-firebase-database-name>")) {
-      firebase.initializeApp(firebaseConfig);
-      db = firebase.database();
-      console.log("Firebase initialized successfully!");
-    } else {
-      console.log("Firebase CDN not loaded or config set to default. Operating in LocalStorage mode.");
-    }
-  } catch (error) {
-    console.error("Firebase init failed. Operating in LocalStorage mode:", error);
-  }
-
-  function getSafeEmailKey(email) {
-    return email.toLowerCase().replace(/[.#$[\]]/g, "_");
-  }
-
-  window.saveUserToDatabase = function(name, email, plan, txnRefId = "N/A") {
-    const emailKey = getSafeEmailKey(email);
-    const dateStr = new Date().toLocaleDateString();
+  window.saveUserToDatabase = async function(name, email, plan, txnRefId = "N/A") {
+    const dateStr = window.registrationDate || new Date().toLocaleDateString();
+    const totalOverall = plan === "Free" ? 4 : 33;
+    const completedOverall = window.completedExercisesList ? window.completedExercisesList.length : 0;
 
     const userDataObj = {
       name: name,
@@ -32,60 +13,59 @@ document.addEventListener("DOMContentLoaded", () => {
       plan: plan,
       registrationDate: dateStr,
       txnRefId: txnRefId,
-      lastUpdated: new Date().toISOString(),
       waterCount: window.userWaterCount || 0,
       waterTarget: window.userWaterTarget || 8,
-      completedExercisesCount: 0,
-      totalExercisesCount: 0,
+      completedExercisesCount: completedOverall,
+      totalExercisesCount: totalOverall,
+      completedExercisesList: window.completedExercisesList || [],
       weightLogs: window.weightLogs || [],
       queries: window.trainerQueries || []
     };
 
-    if (db) {
-      db.ref("users/" + emailKey).update(userDataObj);
+    if (typeof window.dbSaveUser === 'function') {
+      await window.dbSaveUser(email, userDataObj);
+    } else {
+      localStorage.setItem("fitlife_current_user", JSON.stringify(userDataObj));
     }
-    localStorage.setItem("fitlife_current_user", JSON.stringify(userDataObj));
   };
 
-  window.syncUserProgress = function() {
+  window.syncUserProgress = async function() {
     const email = window.registeredEmail;
     if (!email) return;
 
-    const emailKey = getSafeEmailKey(email);
-    const checkboxes = document.querySelectorAll(".workout-chk");
-    const checkedCount = Array.from(checkboxes).filter(chk => chk.checked).length;
-    const totalChk = checkboxes.length;
+    const totalOverall = window.registeredPlan === "Free" ? 4 : 33;
+    const completedOverall = window.completedExercisesList ? window.completedExercisesList.length : 0;
 
     const progressUpdate = {
       waterCount: window.userWaterCount || 0,
       waterTarget: window.userWaterTarget || 8,
-      completedExercisesCount: checkedCount,
-      totalExercisesCount: totalChk,
+      completedExercisesCount: completedOverall,
+      totalExercisesCount: totalOverall,
+      completedExercisesList: window.completedExercisesList || [],
       weightLogs: window.weightLogs || [],
-      queries: window.trainerQueries || [],
-      lastUpdated: new Date().toISOString()
+      queries: window.trainerQueries || []
     };
 
-    if (db) {
-      db.ref("users/" + emailKey).update(progressUpdate);
-    }
-
-    let localData = localStorage.getItem("fitlife_current_user");
-    if (localData) {
-      let parsed = JSON.parse(localData);
-      Object.assign(parsed, progressUpdate);
-      localStorage.setItem("fitlife_current_user", JSON.stringify(parsed));
+    if (typeof window.dbSaveUser === 'function') {
+      await window.dbSaveUser(email, progressUpdate);
+    } else {
+      let localData = localStorage.getItem("fitlife_current_user");
+      if (localData) {
+        let parsed = JSON.parse(localData);
+        Object.assign(parsed, progressUpdate);
+        localStorage.setItem("fitlife_current_user", JSON.stringify(parsed));
+      }
     }
   };
 
-  window.syncUserProgressManual = function() {
+  window.syncUserProgressManual = async function() {
     const email = window.registeredEmail;
     if (!email) {
       alert("No active registration found. Please register first.");
       return;
     }
     
-    window.syncUserProgress();
+    await window.syncUserProgress();
 
     const saveBtn = document.getElementById("dashSaveBtn");
     if (saveBtn) {
@@ -326,7 +306,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ONBOARDING FORM SUBMISSION
-  userForm.addEventListener("submit", function (e) {
+  userForm.addEventListener("submit", async function (e) {
     e.preventDefault();
 
     const name = document.getElementById("name").value.trim();
@@ -338,15 +318,53 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // Save registration parameters onto the window context
+    // Check if user already exists in Firestore (Returning User auto-login)
+    if (typeof window.dbGetUser === 'function') {
+      try {
+        const existingUser = await window.dbGetUser(email);
+        if (existingUser) {
+          alert("Welcome back! Loading your existing profile...");
+
+          // Restore credentials and progress
+          window.registeredName = existingUser.name || name;
+          window.registeredEmail = existingUser.email || email;
+          window.registeredPlan = existingUser.plan || plan;
+          window.registrationDate = existingUser.registrationDate;
+          window.txnRefId = existingUser.txnRefId || "N/A";
+          window.userWaterCount = existingUser.waterCount || 0;
+          window.userWaterTarget = existingUser.waterTarget || 8;
+          window.weightLogs = existingUser.weightLogs || [];
+          window.trainerQueries = existingUser.queries || [];
+          window.completedExercisesCount = existingUser.completedExercisesCount || 0;
+          window.totalExercisesCount = existingUser.totalExercisesCount || (existingUser.plan === "Free" ? 4 : 33);
+          window.completedExercisesList = existingUser.completedExercisesList || [];
+
+          // Sync local water variable
+          waterCount = window.userWaterCount;
+
+          // Unlock dashboard
+          unlockDashboardUI(window.registeredName, window.registeredEmail, window.registeredPlan);
+
+          // Update UI components
+          updateWaterUI();
+          renderWeightLogTable();
+          return;
+        }
+      } catch (err) {
+        console.error("Error checking returning user:", err);
+      }
+    }
+
+    // New User Onboarding
     window.registeredName = name;
     window.registeredEmail = email;
     window.registeredPlan = plan;
+    window.registrationDate = new Date().toLocaleDateString();
 
     if (plan === "Free") {
-      completeRegistrationAndUnlockDashboard(name, email, plan);
+      await completeRegistrationAndUnlockDashboard(name, email, plan);
     } else {
-      saveUserToDatabase(name, email, plan, "Pending");
+      await saveUserToDatabase(name, email, plan, "Pending");
 
       const amount = plan === "Standard" ? "₹499" : "₹899";
       document.getElementById("paymentPlanSummary").textContent = `${plan} Plan - ${amount}`;
@@ -361,9 +379,12 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // HELPER TO COMPLETE REGISTRATION & SHOW DASHBOARD
-  function completeRegistrationAndUnlockDashboard(name, email, plan) {
-    saveUserToDatabase(name, email, plan, window.txnRefId || "N/A");
+  async function completeRegistrationAndUnlockDashboard(name, email, plan) {
+    await saveUserToDatabase(name, email, plan, window.txnRefId || "N/A");
+    unlockDashboardUI(name, email, plan);
+  }
 
+  function unlockDashboardUI(name, email, plan) {
     // Hide Landing Page sections
     document.querySelectorAll(".landing-section").forEach(sec => {
       sec.style.display = "none";
@@ -445,7 +466,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Payment Confirmation Form
   const paymentConfirmForm = document.getElementById("paymentConfirmForm");
   if (paymentConfirmForm) {
-    paymentConfirmForm.addEventListener("submit", function(e) {
+    paymentConfirmForm.addEventListener("submit", async function(e) {
       e.preventDefault();
       const txnRefId = document.getElementById("txnRefId").value.trim();
 
@@ -459,7 +480,7 @@ document.addEventListener("DOMContentLoaded", () => {
       window.txnAmount = window.registeredPlan === "Standard" ? "₹499" : "₹899";
 
       // Unlock Dashboard
-      completeRegistrationAndUnlockDashboard(
+      await completeRegistrationAndUnlockDashboard(
         window.registeredName,
         window.registeredEmail,
         window.registeredPlan
@@ -1008,7 +1029,10 @@ document.addEventListener("DOMContentLoaded", () => {
     if (plan === "Standard") {
       switchWorkoutDay(1);
       loadDietBlueprint("gain");
-      window.weightLogs = []; // Reset logs upon new registration
+      if (!window.weightLogs) {
+        window.weightLogs = [];
+      }
+      renderWeightLogTable();
     }
   }
 
@@ -1017,6 +1041,20 @@ document.addEventListener("DOMContentLoaded", () => {
     const checkboxes = document.querySelectorAll(".workout-chk");
     const progressBar = document.getElementById("workoutProgressBar");
     const progressNum = document.getElementById("workoutProgressNum");
+
+    // Restore checkbox states from saved progress array
+    if (window.completedExercisesList && window.completedExercisesList.length > 0) {
+      checkboxes.forEach(chk => {
+        const name = chk.getAttribute("data-name");
+        if (window.completedExercisesList.includes(name)) {
+          chk.checked = true;
+          const item = chk.closest(".exercise-item");
+          if (item) {
+            item.classList.add("completed");
+          }
+        }
+      });
+    }
 
     function calculateProgress() {
       if (checkboxes.length === 0) return;
@@ -1029,18 +1067,32 @@ document.addEventListener("DOMContentLoaded", () => {
       // Update in logs too
       const logExercises = document.getElementById("logExercises");
       if (logExercises) {
-        logExercises.textContent = `${checkedCount} of ${checkboxes.length} Completed (${percent}%)`;
+        const totalOverall = window.registeredPlan === "Free" ? 4 : 33;
+        const completedOverall = window.completedExercisesList ? window.completedExercisesList.length : 0;
+        const pctOverall = Math.round((completedOverall / totalOverall) * 100);
+        logExercises.textContent = `${completedOverall} of ${totalOverall} Completed (${pctOverall}%)`;
       }
     }
 
     checkboxes.forEach(chk => {
       chk.addEventListener("change", (e) => {
         const item = e.target.closest(".exercise-item");
+        const name = chk.getAttribute("data-name");
+        
+        if (!window.completedExercisesList) {
+          window.completedExercisesList = [];
+        }
+
         if (e.target.checked) {
           item.classList.add("completed");
+          if (!window.completedExercisesList.includes(name)) {
+            window.completedExercisesList.push(name);
+          }
         } else {
           item.classList.remove("completed");
+          window.completedExercisesList = window.completedExercisesList.filter(n => n !== name);
         }
+
         calculateProgress();
         syncUserProgress();
         markProgressUnsaved();
@@ -1297,9 +1349,11 @@ document.addEventListener("DOMContentLoaded", () => {
       logWater.textContent = "0 / 8 Cups (0%)";
     }
 
-    // Exercises (Initially 0)
-    const totalChk = document.querySelectorAll(".workout-chk").length;
-    logExercises.textContent = `0 of ${totalChk} Completed (0%)`;
+    // Exercises
+    const totalOverall = plan === "Free" ? 4 : 33;
+    const completedOverall = window.completedExercisesList ? window.completedExercisesList.length : 0;
+    const pctOverall = Math.round((completedOverall / totalOverall) * 100);
+    logExercises.textContent = `${completedOverall} of ${totalOverall} Completed (${pctOverall}%)`;
 
     // Payment Logs Sync
     if (logPaymentBox && logPayment) {
@@ -1318,8 +1372,30 @@ document.addEventListener("DOMContentLoaded", () => {
   window.logoutDashboard = function() {
     if (confirm("Are you sure you want to exit your dashboard? Your active workout progress will be reset.")) {
       dashboard.style.display = "none";
+      
       // Clear form
       userForm.reset();
+      
+      // Reset session global state variables
+      window.registeredName = null;
+      window.registeredEmail = null;
+      window.registeredPlan = null;
+      window.registrationDate = null;
+      window.txnRefId = null;
+      window.userWaterCount = 0;
+      window.userWaterTarget = 8;
+      window.weightLogs = [];
+      window.trainerQueries = [];
+      waterCount = 0;
+      
+      // Reset checkboxes
+      const checkboxes = document.querySelectorAll(".workout-chk");
+      checkboxes.forEach(chk => {
+        chk.checked = false;
+        const item = chk.closest(".exercise-item");
+        if (item) item.classList.remove("completed");
+      });
+
       // Show landing sections
       document.querySelectorAll(".landing-section").forEach(sec => {
         sec.style.display = "block";
@@ -1331,185 +1407,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
-  // ADMIN PORTAL FUNCTIONS
-  window.openAdminLogin = function() {
-    document.getElementById("adminPasscode").value = "";
-    document.getElementById("adminLoginModal").style.display = "flex";
-  };
-
-  window.closeAdminLogin = function() {
-    document.getElementById("adminLoginModal").style.display = "none";
-  };
-
-  window.closeAdminDashboard = function() {
-    document.getElementById("adminDashboard").style.display = "none";
-    document.querySelectorAll(".landing-section").forEach(sec => {
-      sec.style.display = "block";
-    });
-    formSection.style.display = "flex";
-    showSection("home");
-  };
-
-  const adminLoginForm = document.getElementById("adminLoginForm");
-  if (adminLoginForm) {
-    adminLoginForm.addEventListener("submit", function(e) {
-      e.preventDefault();
-      const passcode = document.getElementById("adminPasscode").value;
-
-      if (passcode === "admin123") {
-        closeAdminLogin();
-        dashboard.style.display = "none";
-        document.querySelectorAll(".landing-section").forEach(sec => {
-          sec.style.display = "none";
-        });
-        formSection.style.display = "none";
-        
-        document.getElementById("adminDashboard").style.display = "block";
-        document.getElementById("adminDashboard").scrollIntoView({ behavior: "smooth" });
-
-        fetchAdminData();
-      } else {
-        alert("Incorrect administrator passcode. Access Denied.");
-      }
-    });
-  }
-
-  window.allUsersData = {}; 
-
-  window.fetchAdminData = function() {
-    const tableBody = document.getElementById("adminUserTableBody");
-    tableBody.innerHTML = `<tr><td colspan="9" style="text-align: center; padding: 20px;">Fetching logs in real-time...</td></tr>`;
-
-    if (db) {
-      db.ref("users").once("value").then((snapshot) => {
-        const data = snapshot.val();
-        if (data) {
-          window.allUsersData = data;
-          renderAdminUsers(data);
-        } else {
-          tableBody.innerHTML = `<tr><td colspan="9" style="text-align: center; padding: 20px; color: var(--text-muted);">No users registered in database yet.</td></tr>`;
-        }
-      }).catch(err => {
-        console.error("Database fetch failed, loading local logs:", err);
-        loadLocalFallbackAdmin();
-      });
-    } else {
-      loadLocalFallbackAdmin();
-    }
-  };
-
-  function loadLocalFallbackAdmin() {
-    const tableBody = document.getElementById("adminUserTableBody");
-    const localData = localStorage.getItem("fitlife_current_user");
-    if (localData) {
-      const parsed = JSON.parse(localData);
-      window.allUsersData = { "local_session": parsed };
-      renderAdminUsers(window.allUsersData);
-    } else {
-      tableBody.innerHTML = `<tr><td colspan="9" style="text-align: center; padding: 20px; color: var(--text-muted);">Database offline. No local session users logged.</td></tr>`;
-    }
-  }
-
-  function renderAdminUsers(usersObject) {
-    const tableBody = document.getElementById("adminUserTableBody");
-    if (!usersObject || Object.keys(usersObject).length === 0) {
-      tableBody.innerHTML = `<tr><td colspan="9" style="text-align: center; padding: 20px; color: var(--text-muted);">No logs to display.</td></tr>`;
-      return;
-    }
-
-    let rowsHtml = "";
-    Object.keys(usersObject).forEach(key => {
-      const u = usersObject[key];
-      const pCount = u.completedExercisesCount || 0;
-      const tCount = u.totalExercisesCount || 0;
-      const progressPercent = tCount > 0 ? Math.round((pCount / tCount) * 100) : 0;
-      const weightText = u.weightLogs && u.weightLogs.length > 0 ? u.weightLogs[0].weight : "N/A";
-      const utrText = u.txnRefId || "N/A";
-      const waterText = `${u.waterCount || 0} / ${u.waterTarget || 8} Cups`;
-
-      rowsHtml += `
-        <tr>
-          <td>${u.registrationDate || "N/A"}</td>
-          <td style="font-weight: 700; color: white;">${u.name}</td>
-          <td>${u.email}</td>
-          <td><span class="plan-badge">${u.plan || "Free"}</span></td>
-          <td style="font-family: monospace; color: var(--primary); font-weight:700;">${utrText}</td>
-          <td>${waterText}</td>
-          <td>
-            <div style="display: flex; align-items: center; gap: 8px;">
-              <span style="font-size: 11px; font-weight:700;">${progressPercent}%</span>
-              <div class="progress-bar-bg" style="width: 60px; height: 4px; display: inline-block;">
-                <div class="progress-bar-fill" style="width: ${progressPercent}%; height: 100%;"></div>
-              </div>
-            </div>
-          </td>
-          <td style="color: var(--primary); font-weight:700;">${weightText}</td>
-          <td><button class="admin-btn-detail" onclick="viewAdminUserDetail('${key}')">Detail</button></td>
-        </tr>
-      `;
-    });
-
-    tableBody.innerHTML = rowsHtml;
-  }
-
-  window.viewAdminUserDetail = function(key) {
-    const u = window.allUsersData[key];
-    if (!u) return;
-
-    document.getElementById("adminUserDetailBox").style.display = "block";
-    document.getElementById("detailUserName").textContent = `${u.name}'s Training Dossier`;
-    document.getElementById("detailUserPlan").textContent = `${u.plan || "Free"} Plan`;
-    document.getElementById("detailUserWeight").textContent = u.weightLogs && u.weightLogs.length > 0 ? u.weightLogs[0].weight : "No entry";
-    document.getElementById("detailUserWater").textContent = `${u.waterCount || 0} / ${u.waterTarget || 8} Cups`;
-    
-    const pCount = u.completedExercisesCount || 0;
-    const tCount = u.totalExercisesCount || 0;
-    const pct = tCount > 0 ? Math.round((pCount / tCount) * 100) : 0;
-    document.getElementById("detailUserChecklist").textContent = `${pCount} of ${tCount} (${pct}%)`;
-
-    // Render Weight History Table
-    const weightTableBody = document.getElementById("detailUserWeightTableBody");
-    if (u.weightLogs && u.weightLogs.length > 0) {
-      weightTableBody.innerHTML = u.weightLogs.map(w => `
-        <tr>
-          <td>${w.date}</td>
-          <td style="color: var(--primary); font-weight:700;">${w.weight}</td>
-        </tr>
-      `).join("");
-    } else {
-      weightTableBody.innerHTML = `<tr><td colspan="2" style="text-align: center; color: var(--text-muted);">No weight history.</td></tr>`;
-    }
-
-    // Render Queries List
-    const queriesContainer = document.getElementById("detailUserQueries");
-    if (u.queries && u.queries.length > 0) {
-      queriesContainer.innerHTML = u.queries.map(q => `
-        <div class="admin-query-row" style="margin-bottom: 8px;">
-          <div class="admin-query-date">${q.date}</div>
-          <div class="admin-query-text">"${q.query}"</div>
-        </div>
-      `).join("");
-    } else {
-      queriesContainer.innerHTML = `<p style="color: var(--text-muted); font-size: 12px; text-align: center;">No support messages sent.</p>`;
-    }
-
-    document.getElementById("adminUserDetailBox").scrollIntoView({ behavior: "smooth" });
-  };
-
-  window.filterAdminUsers = function() {
-    const searchVal = document.getElementById("adminSearchInput").value.trim().toLowerCase();
-    if (!window.allUsersData || Object.keys(window.allUsersData).length === 0) return;
-
-    const filtered = {};
-    Object.keys(window.allUsersData).forEach(key => {
-      const u = window.allUsersData[key];
-      if (u.name.toLowerCase().includes(searchVal) || u.email.toLowerCase().includes(searchVal)) {
-        filtered[key] = u;
-      }
-    });
-
-    renderAdminUsers(filtered);
-  };
+  // ADMIN PORTAL FUNCTIONS DELETED: Moved to admin.html
 });
 
 
