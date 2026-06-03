@@ -2,6 +2,46 @@ document.addEventListener("DOMContentLoaded", () => {
   // Firebase configuration and Firestore operations are handled in firebase.js.
   // We can use window.dbSaveUser, window.dbGetUser, window.dbGetAllUsers directly.
 
+  // Browser refresh auto-login support
+  const localUserStr = localStorage.getItem("fitlife_current_user");
+  if (localUserStr) {
+    try {
+      const localUser = JSON.parse(localUserStr);
+      if (localUser && localUser.email) {
+        console.log("Found cached active session for:", localUser.email);
+        setTimeout(async () => {
+          if (typeof window.dbGetUser === 'function') {
+            const existingUser = await window.dbGetUser(localUser.email);
+            if (existingUser) {
+              window.registeredName = existingUser.name;
+              window.registeredEmail = existingUser.email;
+              window.registeredPlan = existingUser.plan;
+              window.registrationDate = existingUser.registrationDate;
+              window.txnRefId = existingUser.txnRefId || existingUser.transactionId || "N/A";
+              window.userWaterCount = existingUser.waterCount || 0;
+              window.userWaterTarget = existingUser.waterTarget || 8;
+              window.weightLogs = existingUser.weightLogs || [];
+              window.trainerQueries = existingUser.queries || [];
+              window.completedExercisesCount = existingUser.completedExercisesCount || 0;
+              window.totalExercisesCount = existingUser.totalExercisesCount || (existingUser.plan === "Free" ? 4 : 33);
+              window.completedExercisesList = existingUser.completedExercisesList || [];
+              window.selectedFitnessGoal = existingUser.fitnessGoal || "gain";
+
+              waterCount = window.userWaterCount;
+
+              unlockDashboardUI(window.registeredName, window.registeredEmail, window.registeredPlan);
+              updateWaterUI();
+              renderWeightLogTable();
+              window.loadDietBlueprint(window.selectedFitnessGoal, false);
+            }
+          }
+        }, 150);
+      }
+    } catch (e) {
+      console.error("Error reading local user session:", e);
+    }
+  }
+
   window.saveUserToDatabase = async function(name, email, plan, txnRefId = "N/A") {
     const dateStr = window.registrationDate || new Date().toLocaleDateString();
     const totalOverall = plan === "Free" ? 4 : 33;
@@ -1028,7 +1068,8 @@ document.addEventListener("DOMContentLoaded", () => {
     // Load initial data splits if standard plan is active
     if (plan === "Standard") {
       switchWorkoutDay(1);
-      loadDietBlueprint("gain");
+      const initialGoal = window.selectedFitnessGoal || "gain";
+      loadDietBlueprint(initialGoal, false); // Don't trigger save progress on load
       if (!window.weightLogs) {
         window.weightLogs = [];
       }
@@ -1124,7 +1165,7 @@ document.addEventListener("DOMContentLoaded", () => {
     initWorkoutChecklist();
   };
 
-  window.loadDietBlueprint = function (goal) {
+  window.loadDietBlueprint = function (goal, shouldSync = true) {
     const container = document.getElementById("dietBlueprintContainer");
     if (!container) return;
 
@@ -1192,6 +1233,19 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     container.innerHTML = blueprintHtml;
+
+    // Set diet goal value in DOM dropdown if exists
+    const dietGoalSelect = document.getElementById("dietGoalSelect");
+    if (dietGoalSelect) {
+      dietGoalSelect.value = goal;
+    }
+
+    // Save to window variable
+    window.selectedFitnessGoal = goal;
+
+    if (shouldSync) {
+      syncUserProgress();
+    }
   };
 
   window.addWeightLog = function () {

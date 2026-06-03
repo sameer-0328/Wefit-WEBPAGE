@@ -31,6 +31,11 @@
       color: #22c55e;
       border: 1px solid #22c55e;
     }
+    .status-badge.rejected {
+      background: rgba(239, 68, 68, 0.1);
+      color: #ef4444;
+      border: 1px solid #ef4444;
+    }
     .admin-btn-delete {
       background: var(--primary) !important;
       color: white;
@@ -115,9 +120,14 @@
     </div>
 
     <!-- CONTROLS & SEARCH -->
-    <div style="display: flex; gap: 15px; margin-bottom: 25px; flex-wrap: wrap;">
-      <input type="text" id="adminSearch" placeholder="Search by name, email or transaction ID..." style="flex: 1; min-width: 250px; background: var(--bg-card); border: 1px solid var(--border-color); color: white; padding: 12px 16px; border-radius: 4px; font-size: 14px;" oninput="onSearchInput()">
-      <button onclick="reloadLogs()" class="btn" style="padding: 12px 24px; font-size: 14px;">🔄 Refresh Logs</button>
+    <div style="display: flex; gap: 15px; margin-bottom: 25px; flex-wrap: wrap; align-items: center;">
+      <input type="text" id="adminSearch" placeholder="Search by name, email or UTR..." style="flex: 2; min-width: 250px; background: var(--bg-card); border: 1px solid var(--border-color); color: white; padding: 12px 16px; border-radius: 4px; font-size: 14px;" oninput="onSearchInput()">
+      <select id="planFilter" onchange="onSearchInput()" style="flex: 1; min-width: 150px; background: var(--bg-card); border: 1px solid var(--border-color); color: white; padding: 12px 16px; border-radius: 4px; font-size: 14px; cursor: pointer; outline: none;">
+        <option value="all">All Plans</option>
+        <option value="Free">Free Plan</option>
+        <option value="Standard">Standard Plan</option>
+      </select>
+      <button onclick="reloadLogs()" class="btn" style="padding: 12px 24px; font-size: 14px; margin: 0;">🔄 Refresh Logs</button>
     </div>
 
     <!-- DATA TABLE -->
@@ -191,16 +201,38 @@
         const pCount = u.completedExercisesCount || 0;
         const tCount = u.totalExercisesCount || 0;
         const pct = tCount > 0 ? Math.round((pCount / tCount) * 100) : 0;
-        const statusClass = (u.paymentStatus === 'Verified' || u.plan === 'Free') ? 'verified' : 'pending';
-        const statusLabel = (u.paymentStatus === 'Verified' || u.plan === 'Free') ? 'Verified' : 'Pending Verification';
+        
+        let statusClass = 'pending';
+        let statusLabel = 'Pending Verification';
+        if (u.paymentStatus === 'Verified' || u.plan === 'Free') {
+          statusClass = 'verified';
+          statusLabel = 'Verified';
+        } else if (u.paymentStatus === 'Rejected') {
+          statusClass = 'rejected';
+          statusLabel = 'Rejected';
+        }
+
+        // Action buttons based on status
+        let actionButtonsHtml = '';
+        if (u.plan !== 'Free' && u.paymentStatus !== 'Verified') {
+          actionButtonsHtml += `
+            <button onclick="triggerApprove('${u.email}')" style="background:#22c55e; border:none; color:white; padding:6px 10px; font-size:11px; font-weight:700; border-radius:4px; cursor:pointer; text-transform:uppercase; margin-right:5px;">Approve</button>
+            <button onclick="triggerReject('${u.email}')" style="background:#ef4444; border:none; color:white; padding:6px 10px; font-size:11px; font-weight:700; border-radius:4px; cursor:pointer; text-transform:uppercase; margin-right:5px;">Reject</button>
+          `;
+        }
 
         return `
           <tr>
             <td style="padding: 14px 15px;">${u.registrationDate || "N/A"}</td>
             <td style="padding: 14px 15px; font-weight:700; color: white;">${u.name}</td>
             <td style="padding: 14px 15px;">${u.email}</td>
-            <td style="padding: 14px 15px;"><span class="plan-badge">${u.plan}</span></td>
-            <td style="padding: 14px 15px; font-family:monospace; color: var(--primary); font-weight:700;">${u.txnRefId || "N/A"}</td>
+            <td style="padding: 14px 15px;">
+              <select onchange="triggerPlanChange('${u.email}', this.value)" style="background: #111; border: 1px solid var(--border-color); color: white; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px;">
+                <option value="Free" ${u.plan === 'Free' ? 'selected' : ''}>Free</option>
+                <option value="Standard" ${u.plan === 'Standard' ? 'selected' : ''}>Standard</option>
+              </select>
+            </td>
+            <td style="padding: 14px 15px; font-family:monospace; color: var(--primary); font-weight:700;">${u.txnRefId || u.transactionId || "N/A"}</td>
             <td style="padding: 14px 15px;"><span class="status-badge ${statusClass}">${statusLabel}</span></td>
             <td style="padding: 14px 15px;">
               <div style="display: flex; align-items: center; gap: 8px;">
@@ -210,7 +242,8 @@
                 </div>
               </div>
             </td>
-            <td style="padding: 14px 15px; text-align: center;">
+            <td style="padding: 14px 15px; text-align: center; white-space: nowrap;">
+              ${actionButtonsHtml}
               <button class="admin-btn-delete" onclick="triggerDelete('${u.email}')">Delete</button>
             </td>
           </tr>
@@ -229,12 +262,68 @@
     // Real-time search handler
     function onSearchInput() {
       const q = document.getElementById("adminSearch").value.toLowerCase().trim();
-      const filtered = cachedUsers.filter(u => 
-        u.name.toLowerCase().includes(q) || 
-        u.email.toLowerCase().includes(q) || 
-        (u.txnRefId && u.txnRefId.toLowerCase().includes(q))
-      );
+      const plan = document.getElementById("planFilter").value;
+
+      const filtered = cachedUsers.filter(u => {
+        const matchesQuery = u.name.toLowerCase().includes(q) || 
+                             u.email.toLowerCase().includes(q) || 
+                             (u.txnRefId && u.txnRefId.toLowerCase().includes(q)) ||
+                             (u.transactionId && u.transactionId.toLowerCase().includes(q));
+                             
+        const matchesPlan = (plan === "all" || u.plan === plan);
+
+        return matchesQuery && matchesPlan;
+      });
+
       renderUsers(filtered);
+    }
+
+    // Approve payment status
+    async function triggerApprove(email) {
+      if (confirm(`Approve payment and activate plan for ${email}?`)) {
+        if (typeof dbUpdateUserStatus === 'function') {
+          const success = await dbUpdateUserStatus(email, { paymentStatus: "Verified" });
+          if (success) {
+            alert("Payment successfully approved and plan activated.");
+            reloadLogs();
+          } else {
+            alert("Failed to update status.");
+          }
+        }
+      }
+    }
+
+    // Reject payment status
+    async function triggerReject(email) {
+      if (confirm(`Reject payment transaction for ${email}?`)) {
+        if (typeof dbUpdateUserStatus === 'function') {
+          const success = await dbUpdateUserStatus(email, { paymentStatus: "Rejected" });
+          if (success) {
+            alert("Payment rejected.");
+            reloadLogs();
+          } else {
+            alert("Failed to update status.");
+          }
+        }
+      }
+    }
+
+    // Change plan tier
+    async function triggerPlanChange(email, newPlan) {
+      if (confirm(`Change plan for ${email} to ${newPlan}?`)) {
+        if (typeof dbUpdateUserStatus === 'function') {
+          const statusUpdate = newPlan === "Free" ? "Verified" : "Pending Verification";
+          const success = await dbUpdateUserStatus(email, { plan: newPlan, paymentStatus: statusUpdate });
+          if (success) {
+            alert(`Plan updated to ${newPlan}.`);
+            reloadLogs();
+          } else {
+            alert("Failed to update plan.");
+          }
+        }
+      } else {
+        reloadLogs();
+      }
     }
 
     // Delete user
