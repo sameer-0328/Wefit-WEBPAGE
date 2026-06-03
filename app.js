@@ -13,9 +13,15 @@ document.addEventListener("DOMContentLoaded", () => {
           if (typeof window.dbGetUser === 'function') {
             const existingUser = await window.dbGetUser(localUser.email);
             if (existingUser) {
+              if (existingUser.paymentStatus === "Rejected") {
+                alert("Your Standard Plan payment verification was rejected by admin. Loading Free Plan instead.");
+                existingUser.plan = "Free";
+                existingUser.activePlan = "Free";
+              }
+              
               window.registeredName = existingUser.name;
               window.registeredEmail = existingUser.email;
-              window.registeredPlan = existingUser.plan;
+              window.registeredPlan = existingUser.activePlan || existingUser.plan || "Free";
               window.registrationDate = existingUser.registrationDate;
               window.txnRefId = existingUser.txnRefId || existingUser.transactionId || "N/A";
               window.userWaterCount = existingUser.waterCount || 0;
@@ -28,6 +34,11 @@ document.addEventListener("DOMContentLoaded", () => {
               window.selectedFitnessGoal = existingUser.fitnessGoal || "gain";
 
               waterCount = window.userWaterCount;
+
+              // Update last login in database
+              if (typeof window.dbUpdateUserStatus === 'function') {
+                window.dbUpdateUserStatus(existingUser.email, { lastLogin: new Date().toISOString() });
+              }
 
               unlockDashboardUI(window.registeredName, window.registeredEmail, window.registeredPlan);
               updateWaterUI();
@@ -363,12 +374,18 @@ document.addEventListener("DOMContentLoaded", () => {
       try {
         const existingUser = await window.dbGetUser(email);
         if (existingUser) {
+          if (existingUser.paymentStatus === "Rejected") {
+            alert("Your Standard Plan payment verification was rejected by admin. Loading Free Plan instead.");
+            existingUser.plan = "Free";
+            existingUser.activePlan = "Free";
+          }
+          
           alert("Welcome back! Loading your existing profile...");
 
           // Restore credentials and progress
           window.registeredName = existingUser.name || name;
           window.registeredEmail = existingUser.email || email;
-          window.registeredPlan = existingUser.plan || plan;
+          window.registeredPlan = existingUser.activePlan || existingUser.plan || plan;
           window.registrationDate = existingUser.registrationDate;
           window.txnRefId = existingUser.txnRefId || "N/A";
           window.userWaterCount = existingUser.waterCount || 0;
@@ -381,6 +398,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
           // Sync local water variable
           waterCount = window.userWaterCount;
+
+          // Update last login in database
+          if (typeof window.dbUpdateUserStatus === 'function') {
+            window.dbUpdateUserStatus(existingUser.email, { lastLogin: new Date().toISOString() });
+          }
 
           // Unlock dashboard
           unlockDashboardUI(window.registeredName, window.registeredEmail, window.registeredPlan);
