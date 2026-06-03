@@ -31,34 +31,67 @@ window.dbSaveUser = async function(email, userData) {
   const cleanEmail = email.toLowerCase().trim();
   const dateStr = new Date().toLocaleDateString();
 
+  // Create document update object containing only defined values
   const docData = {
     userId: cleanEmail,
-    name: userData.name || "",
     email: cleanEmail,
-    plan: userData.plan || "Free",
-    txnRefId: userData.txnRefId || userData.transactionId || "N/A",
-    transactionId: userData.txnRefId || userData.transactionId || "N/A",
-    paymentStatus: userData.paymentStatus || (userData.plan === "Free" ? "Verified" : "Pending Verification"),
-    registrationDate: userData.registrationDate || dateStr,
-    waterCount: userData.waterCount !== undefined ? userData.waterCount : 0,
-    waterTarget: userData.waterTarget !== undefined ? userData.waterTarget : 8,
-    completedExercisesCount: userData.completedExercisesCount !== undefined ? userData.completedExercisesCount : 0,
-    totalExercisesCount: userData.totalExercisesCount !== undefined ? userData.totalExercisesCount : 0,
-    completedExercisesList: userData.completedExercisesList || [],
-    weightLogs: userData.weightLogs || [],
-    queries: userData.queries || [],
-    fitnessGoal: userData.fitnessGoal || "gain",
-    workoutProgress: userData.workoutProgress || (userData.totalExercisesCount > 0 ? Math.round((userData.completedExercisesCount / userData.totalExercisesCount) * 100) + "%" : "0%"),
     lastUpdated: new Date().toISOString()
   };
 
-  // Sync to local client
-  localStorage.setItem("fitlife_current_user", JSON.stringify(docData));
+  if (userData.name !== undefined) docData.name = userData.name;
+  
+  if (userData.plan !== undefined) {
+    docData.plan = userData.plan;
+    docData.activePlan = userData.plan;
+  }
+  if (userData.activePlan !== undefined) {
+    docData.activePlan = userData.activePlan;
+  }
+
+  if (userData.txnRefId !== undefined || userData.transactionId !== undefined) {
+    const txnVal = userData.txnRefId || userData.transactionId || "N/A";
+    docData.txnRefId = txnVal;
+    docData.transactionId = txnVal;
+  }
+
+  if (userData.paymentStatus !== undefined) {
+    docData.paymentStatus = userData.paymentStatus;
+  } else if (userData.plan !== undefined) {
+    docData.paymentStatus = userData.plan === "Free" ? "Verified" : "Pending Verification";
+  }
+
+  if (userData.registrationDate !== undefined) docData.registrationDate = userData.registrationDate;
+  if (userData.waterCount !== undefined) docData.waterCount = userData.waterCount;
+  if (userData.waterTarget !== undefined) docData.waterTarget = userData.waterTarget;
+  if (userData.completedExercisesCount !== undefined) docData.completedExercisesCount = userData.completedExercisesCount;
+  if (userData.totalExercisesCount !== undefined) docData.totalExercisesCount = userData.totalExercisesCount;
+  if (userData.completedExercisesList !== undefined) docData.completedExercisesList = userData.completedExercisesList;
+  if (userData.weightLogs !== undefined) docData.weightLogs = userData.weightLogs;
+  if (userData.queries !== undefined) docData.queries = userData.queries;
+  if (userData.fitnessGoal !== undefined) docData.fitnessGoal = userData.fitnessGoal;
+  if (userData.workoutProgress !== undefined) docData.workoutProgress = userData.workoutProgress;
+  if (userData.lastLogin !== undefined) docData.lastLogin = userData.lastLogin;
+
+  // Sync to local client by merging
+  let mergedData = {};
+  const localData = localStorage.getItem("fitlife_current_user");
+  if (localData) {
+    try {
+      const parsed = JSON.parse(localData);
+      if (parsed && parsed.email === cleanEmail) {
+        mergedData = parsed;
+      }
+    } catch (e) {
+      console.error("Error parsing local user session:", e);
+    }
+  }
+  Object.assign(mergedData, docData);
+  localStorage.setItem("fitlife_current_user", JSON.stringify(mergedData));
 
   if (db) {
     try {
       await db.collection("users").doc(cleanEmail).set(docData, { merge: true });
-      console.log("User successfully written to Firestore:", cleanEmail);
+      console.log("User successfully written to Firestore:", cleanEmail, docData);
       return true;
     } catch (e) {
       console.error("Error writing user to Firestore:", e);
