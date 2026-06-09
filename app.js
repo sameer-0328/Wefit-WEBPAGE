@@ -515,11 +515,42 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // Dashboard Water Tracker Buttons
+  const dashAddWaterBtn = document.getElementById("dash-addWaterBtn");
+  const dashResetWaterBtn = document.getElementById("dash-resetWaterBtn");
+
+  if (dashAddWaterBtn) {
+    dashAddWaterBtn.addEventListener("click", () => {
+      if (waterCount < 12) {
+        waterCount++;
+        updateWaterUI();
+      }
+    });
+  }
+
+  if (dashResetWaterBtn) {
+    dashResetWaterBtn.addEventListener("click", () => {
+      waterCount = 0;
+      updateWaterUI();
+    });
+  }
+
   function updateWaterUI() {
     const percent = Math.min((waterCount / waterTarget) * 100, 100);
-    waterLevel.style.height = `${percent}%`;
-    waterCountText.textContent = `${waterCount} / ${waterTarget}`;
-    waterProgressPercent.textContent = `${percent.toFixed(0)}%`;
+    
+    // Update Landing page tracker elements if they exist
+    if (waterLevel) waterLevel.style.height = `${percent}%`;
+    if (waterCountText) waterCountText.textContent = `${waterCount} / ${waterTarget}`;
+    if (waterProgressPercent) waterProgressPercent.textContent = `${percent.toFixed(0)}%`;
+    
+    // Update Dashboard tracker elements if they exist
+    const dashWaterLevel = document.getElementById("dash-waterLevel");
+    const dashWaterCount = document.getElementById("dash-waterCount");
+    const dashWaterProgressPercent = document.getElementById("dash-waterProgressPercent");
+    
+    if (dashWaterLevel) dashWaterLevel.style.height = `${percent}%`;
+    if (dashWaterCount) dashWaterCount.textContent = `${waterCount} / ${waterTarget}`;
+    if (dashWaterProgressPercent) dashWaterProgressPercent.textContent = `${percent.toFixed(0)}%`;
     
     // Save to global context for logs
     window.userWaterCount = waterCount;
