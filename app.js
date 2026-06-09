@@ -32,6 +32,8 @@ document.addEventListener("DOMContentLoaded", () => {
               window.totalExercisesCount = existingUser.totalExercisesCount || (existingUser.plan === "Free" ? 4 : 33);
               window.completedExercisesList = existingUser.completedExercisesList || [];
               window.selectedFitnessGoal = existingUser.fitnessGoal || "gain";
+              window.userBMI = existingUser.bmi || null;
+              window.userBMIStatus = existingUser.bmiStatus || null;
 
               waterCount = window.userWaterCount;
 
@@ -70,7 +72,9 @@ document.addEventListener("DOMContentLoaded", () => {
       totalExercisesCount: totalOverall,
       completedExercisesList: window.completedExercisesList || [],
       weightLogs: window.weightLogs || [],
-      queries: window.trainerQueries || []
+      queries: window.trainerQueries || [],
+      bmi: window.userBMI || null,
+      bmiStatus: window.userBMIStatus || null
     };
 
     if (typeof window.dbSaveUser === 'function') {
@@ -94,7 +98,9 @@ document.addEventListener("DOMContentLoaded", () => {
       totalExercisesCount: totalOverall,
       completedExercisesList: window.completedExercisesList || [],
       weightLogs: window.weightLogs || [],
-      queries: window.trainerQueries || []
+      queries: window.trainerQueries || [],
+      bmi: window.userBMI || null,
+      bmiStatus: window.userBMIStatus || null
     };
 
     if (typeof window.dbSaveUser === 'function') {
@@ -312,6 +318,178 @@ document.addEventListener("DOMContentLoaded", () => {
     window.userBMIStatus = status;
   }
 
+  window.calculateDashboardBMI = function() {
+    const weightInput = document.getElementById("dash-bmi-weight");
+    const heightInput = document.getElementById("dash-bmi-height");
+    
+    const weight = parseFloat(weightInput.value);
+    const height = parseFloat(heightInput.value);
+    
+    const resultWrapper = document.getElementById("dashBmiResultWrapper");
+    const numDisplay = document.getElementById("dashBmiNum");
+    const statusDisplay = document.getElementById("dashBmiStatus");
+    const progress = document.getElementById("dashBmiProgress");
+    const tipsDisplay = document.getElementById("dashBmiTips");
+
+    if (isNaN(weight) || isNaN(height) || weight <= 0 || height <= 0) {
+      alert("Please enter valid height and weight values.");
+      return;
+    }
+
+    const heightInMeters = height / 100;
+    const bmi = (weight / (heightInMeters * heightInMeters)).toFixed(1);
+
+    numDisplay.textContent = bmi;
+    resultWrapper.style.display = "block";
+
+    let status = "";
+    let colorClass = "";
+    let tipText = "";
+    let progressPercent = 0;
+
+    if (bmi < 18.5) {
+      status = "Underweight";
+      colorClass = "underweight";
+      tipText = "Focus on nutrient-dense foods, proteins, and strength training to build muscle mass safely.";
+      progressPercent = (bmi / 18.5) * 30;
+    } else if (bmi >= 18.5 && bmi < 24.9) {
+      status = "Normal Weight";
+      colorClass = "normal";
+      tipText = "Excellent job! Keep maintaining your weight with balanced eating and regular physical activity.";
+      progressPercent = 30 + ((bmi - 18.5) / 6.4) * 35;
+    } else if (bmi >= 25 && bmi < 29.9) {
+      status = "Overweight";
+      colorClass = "overweight";
+      tipText = "Incorporate regular cardio routines, calorie control, and high-intensity interval training (HIIT).";
+      progressPercent = 65 + ((bmi - 25) / 4.9) * 20;
+    } else {
+      status = "Obese";
+      colorClass = "obese";
+      tipText = "Consult with a health professional. Prioritize low-impact aerobic exercises and portion control.";
+      progressPercent = 85 + Math.min(((bmi - 30) / 10) * 15, 15);
+    }
+
+    statusDisplay.textContent = status;
+    statusDisplay.className = "bmi-status";
+    statusDisplay.style.background = "";
+    statusDisplay.style.color = "";
+    
+    if (colorClass === "underweight") {
+      statusDisplay.style.background = "#3b82f6";
+      statusDisplay.style.color = "#fff";
+    } else if (colorClass === "normal") {
+      statusDisplay.style.background = "#22c55e";
+      statusDisplay.style.color = "#fff";
+    } else if (colorClass === "overweight") {
+      statusDisplay.style.background = "#f59e0b";
+      statusDisplay.style.color = "#fff";
+    } else if (colorClass === "obese") {
+      statusDisplay.style.background = "#ef4444";
+      statusDisplay.style.color = "#fff";
+    }
+    
+    tipsDisplay.textContent = tipText;
+    
+    setTimeout(() => {
+      progress.style.width = `${Math.min(progressPercent, 100)}%`;
+      if (colorClass === "underweight") progress.style.backgroundColor = "#3b82f6";
+      else if (colorClass === "normal") progress.style.backgroundColor = "#22c55e";
+      else if (colorClass === "overweight") progress.style.backgroundColor = "#f59e0b";
+      else if (colorClass === "obese") progress.style.backgroundColor = "#ef4444";
+    }, 100);
+
+    // Save BMI in global contexts
+    window.userBMI = bmi;
+    window.userBMIStatus = status;
+
+    // Update Logs Tab Display immediately
+    const logBmi = document.getElementById("logBmi");
+    if (logBmi) {
+      logBmi.textContent = `${bmi} (${status})`;
+    }
+
+    // Sync to database
+    syncUserProgress();
+    markProgressUnsaved();
+  };
+
+  window.updateDashboardBMIUI = function() {
+    const weightInput = document.getElementById("dash-bmi-weight");
+    const heightInput = document.getElementById("dash-bmi-height");
+    const resultWrapper = document.getElementById("dashBmiResultWrapper");
+    const numDisplay = document.getElementById("dashBmiNum");
+    const statusDisplay = document.getElementById("dashBmiStatus");
+    const progress = document.getElementById("dashBmiProgress");
+    const tipsDisplay = document.getElementById("dashBmiTips");
+
+    // Also populate logs tab
+    const logBmi = document.getElementById("logBmi");
+    if (logBmi) {
+      logBmi.textContent = window.userBMI ? `${window.userBMI} (${window.userBMIStatus})` : "Not Calculated Yet";
+    }
+
+    if (window.userBMI && numDisplay) {
+      numDisplay.textContent = window.userBMI;
+      statusDisplay.textContent = window.userBMIStatus;
+      resultWrapper.style.display = "block";
+      
+      let colorClass = "";
+      let tipText = "";
+      let progressPercent = 0;
+      const bmi = parseFloat(window.userBMI);
+
+      if (bmi < 18.5) {
+        colorClass = "underweight";
+        tipText = "Focus on nutrient-dense foods, proteins, and strength training to build muscle mass safely.";
+        progressPercent = (bmi / 18.5) * 30;
+      } else if (bmi >= 18.5 && bmi < 24.9) {
+        colorClass = "normal";
+        tipText = "Excellent job! Keep maintaining your weight with balanced eating and regular physical activity.";
+        progressPercent = 30 + ((bmi - 18.5) / 6.4) * 35;
+      } else if (bmi >= 25 && bmi < 29.9) {
+        colorClass = "overweight";
+        tipText = "Incorporate regular cardio routines, calorie control, and high-intensity interval training (HIIT).";
+        progressPercent = 65 + ((bmi - 25) / 4.9) * 20;
+      } else {
+        colorClass = "obese";
+        tipText = "Consult with a health professional. Prioritize low-impact aerobic exercises and portion control.";
+        progressPercent = 85 + Math.min(((bmi - 30) / 10) * 15, 15);
+      }
+
+      statusDisplay.className = "bmi-status";
+      statusDisplay.style.background = "";
+      statusDisplay.style.color = "";
+      
+      if (colorClass === "underweight") {
+        statusDisplay.style.background = "#3b82f6";
+        statusDisplay.style.color = "#fff";
+      } else if (colorClass === "normal") {
+        statusDisplay.style.background = "#22c55e";
+        statusDisplay.style.color = "#fff";
+      } else if (colorClass === "overweight") {
+        statusDisplay.style.background = "#f59e0b";
+        statusDisplay.style.color = "#fff";
+      } else if (colorClass === "obese") {
+        statusDisplay.style.background = "#ef4444";
+        statusDisplay.style.color = "#fff";
+      }
+      
+      tipsDisplay.textContent = tipText;
+      
+      setTimeout(() => {
+        progress.style.width = `${Math.min(progressPercent, 100)}%`;
+        if (colorClass === "underweight") progress.style.backgroundColor = "#3b82f6";
+        else if (colorClass === "normal") progress.style.backgroundColor = "#22c55e";
+        else if (colorClass === "overweight") progress.style.backgroundColor = "#f59e0b";
+        else if (colorClass === "obese") progress.style.backgroundColor = "#ef4444";
+      }, 100);
+    } else if (resultWrapper) {
+      resultWrapper.style.display = "none";
+      if (weightInput) weightInput.value = "";
+      if (heightInput) heightInput.value = "";
+    }
+  };
+
   // WATER TRACKER LOGIC
   let waterCount = 0;
   const waterTarget = 8;
@@ -400,6 +578,8 @@ document.addEventListener("DOMContentLoaded", () => {
             window.totalExercisesCount = existingUser.totalExercisesCount || (existingUser.plan === "Free" ? 4 : 33);
             window.completedExercisesList = existingUser.completedExercisesList || [];
             window.selectedFitnessGoal = existingUser.fitnessGoal || "gain";
+            window.userBMI = existingUser.bmi || null;
+            window.userBMIStatus = existingUser.bmiStatus || null;
 
             // Sync local water variable
             waterCount = window.userWaterCount;
@@ -431,6 +611,8 @@ document.addEventListener("DOMContentLoaded", () => {
             window.totalExercisesCount = 33;
             window.completedExercisesList = existingUser.completedExercisesList || [];
             window.selectedFitnessGoal = existingUser.fitnessGoal || "gain";
+            window.userBMI = existingUser.bmi || null;
+            window.userBMIStatus = existingUser.bmiStatus || null;
             
             waterCount = window.userWaterCount;
           }
@@ -508,6 +690,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Populate Logs tab
     updateDashboardLogs(name, email, plan);
+
+    // Populate Dashboard BMI Calculator
+    if (typeof window.updateDashboardBMIUI === 'function') {
+      window.updateDashboardBMIUI();
+    }
   }
 
   // PAYMENT HANDLERS
@@ -1493,7 +1680,14 @@ document.addEventListener("DOMContentLoaded", () => {
       window.userWaterTarget = 8;
       window.weightLogs = [];
       window.trainerQueries = [];
+      window.userBMI = null;
+      window.userBMIStatus = null;
       waterCount = 0;
+
+      // Clear Dashboard BMI UI
+      if (typeof window.updateDashboardBMIUI === 'function') {
+        window.updateDashboardBMIUI();
+      }
       
       // Reset checkboxes
       const checkboxes = document.querySelectorAll(".workout-chk");

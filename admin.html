@@ -163,7 +163,7 @@
           <button onclick="closeDetailModal()" style="background: none; border: none; color: white; font-size: 24px; cursor: pointer; line-height: 1;">&times;</button>
         </div>
 
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 25px;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 25px;">
           <div class="stat-box" style="padding: 12px; background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.03); border-radius: 4px;">
             <span style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">Active Plan</span>
             <span id="detailUserPlan" style="font-weight: 800; display: block; font-size: 15px; color: white; margin-top: 5px;">--</span>
@@ -171,6 +171,10 @@
           <div class="stat-box" style="padding: 12px; background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.03); border-radius: 4px;">
             <span style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">Hydration Log</span>
             <span id="detailUserWater" style="font-weight: 800; display: block; font-size: 15px; color: white; margin-top: 5px;">--</span>
+          </div>
+          <div class="stat-box" style="padding: 12px; background: rgba(255,255,255,0.01); border: 1px solid rgba(255,255,255,0.03); border-radius: 4px;">
+            <span style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">Calculated BMI</span>
+            <span id="detailUserBmi" style="font-weight: 800; display: block; font-size: 15px; color: white; margin-top: 5px;">--</span>
           </div>
         </div>
 
@@ -384,6 +388,9 @@
       
       const waterPct = u.waterTarget > 0 ? Math.min((u.waterCount / u.waterTarget) * 100, 100) : 0;
       document.getElementById("detailUserWater").textContent = `${u.waterCount || 0} / ${u.waterTarget || 8} Cups (${waterPct.toFixed(0)}%)`;
+      
+      const userBmi = u.bmi ? `${u.bmi} (${u.bmiStatus || 'N/A'})` : "Not Calculated";
+      document.getElementById("detailUserBmi").textContent = userBmi;
 
       // Render weight logs
       const weightTable = document.getElementById("detailWeightTable");

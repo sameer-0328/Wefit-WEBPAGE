@@ -88,6 +88,27 @@ window.dbSaveUser = async function(email, userData) {
   Object.assign(mergedData, docData);
   localStorage.setItem("fitlife_current_user", JSON.stringify(mergedData));
 
+  // Sync to local multi-user DB fallback (persisted across logouts)
+  let localUsers = [];
+  const rawLocalUsers = localStorage.getItem("fitlife_local_users");
+  if (rawLocalUsers) {
+    try {
+      localUsers = JSON.parse(rawLocalUsers);
+      if (!Array.isArray(localUsers)) localUsers = [];
+    } catch (e) {
+      console.error("Error parsing fitlife_local_users:", e);
+    }
+  }
+  const userIdx = localUsers.findIndex(u => u.email === cleanEmail);
+  let localUserDoc = (userIdx !== -1) ? localUsers[userIdx] : {};
+  Object.assign(localUserDoc, docData);
+  if (userIdx !== -1) {
+    localUsers[userIdx] = localUserDoc;
+  } else {
+    localUsers.push(localUserDoc);
+  }
+  localStorage.setItem("fitlife_local_users", JSON.stringify(localUsers));
+
   if (db) {
     try {
       await db.collection("users").doc(cleanEmail).set(docData, { merge: true });
@@ -110,7 +131,9 @@ window.dbGetUser = async function(email) {
     try {
       const doc = await db.collection("users").doc(cleanEmail).get();
       if (doc.exists) {
-        return doc.data();
+        const data = doc.data();
+        localStorage.setItem("fitlife_current_user", JSON.stringify(data));
+        return data;
       }
       return null;
     } catch (e) {
@@ -118,12 +141,29 @@ window.dbGetUser = async function(email) {
     }
   }
 
-  // LocalStorage fallback
+  // LocalStorage fallback - check current user first
   const localData = localStorage.getItem("fitlife_current_user");
   if (localData) {
     const parsed = JSON.parse(localData);
     if (parsed.email === cleanEmail) {
       return parsed;
+    }
+  }
+
+  // Check multi-user list
+  const rawLocalUsers = localStorage.getItem("fitlife_local_users");
+  if (rawLocalUsers) {
+    try {
+      const localUsers = JSON.parse(rawLocalUsers);
+      if (Array.isArray(localUsers)) {
+        const found = localUsers.find(u => u.email === cleanEmail);
+        if (found) {
+          localStorage.setItem("fitlife_current_user", JSON.stringify(found));
+          return found;
+        }
+      }
+    } catch (e) {
+      console.error("Error parsing fitlife_local_users:", e);
     }
   }
   return null;
@@ -146,6 +186,18 @@ window.dbGetAllUsers = async function() {
   }
 
   // LocalStorage fallback
+  const rawLocalUsers = localStorage.getItem("fitlife_local_users");
+  if (rawLocalUsers) {
+    try {
+      const localUsers = JSON.parse(rawLocalUsers);
+      if (Array.isArray(localUsers)) {
+        return localUsers.sort((a, b) => new Date(b.lastUpdated || 0) - new Date(a.lastUpdated || 0));
+      }
+    } catch (e) {
+      console.error("Error parsing fitlife_local_users:", e);
+    }
+  }
+
   const localData = localStorage.getItem("fitlife_current_user");
   if (localData) {
     return [JSON.parse(localData)];
@@ -167,6 +219,20 @@ window.dbDeleteUser = async function(email) {
     }
   }
 
+  // Remove from multi-user list
+  const rawLocalUsers = localStorage.getItem("fitlife_local_users");
+  if (rawLocalUsers) {
+    try {
+      let localUsers = JSON.parse(rawLocalUsers);
+      if (Array.isArray(localUsers)) {
+        localUsers = localUsers.filter(u => u.email !== cleanEmail);
+        localStorage.setItem("fitlife_local_users", JSON.stringify(localUsers));
+      }
+    } catch (e) {
+      console.error("Error parsing fitlife_local_users:", e);
+    }
+  }
+
   if (db) {
     try {
       await db.collection("users").doc(cleanEmail).delete();
@@ -185,13 +251,31 @@ window.dbUpdateUserStatus = async function(email, updates) {
   if (!email) return false;
   const cleanEmail = email.toLowerCase().trim();
 
-  // Sync to local client
+  // Sync to local current session
   const localData = localStorage.getItem("fitlife_current_user");
   if (localData) {
     const parsed = JSON.parse(localData);
     if (parsed.email === cleanEmail) {
       Object.assign(parsed, updates);
       localStorage.setItem("fitlife_current_user", JSON.stringify(parsed));
+    }
+  }
+
+  // Sync to local multi-user list
+  const rawLocalUsers = localStorage.getItem("fitlife_local_users");
+  if (rawLocalUsers) {
+    try {
+      const localUsers = JSON.parse(rawLocalUsers);
+      if (Array.isArray(localUsers)) {
+        const foundIdx = localUsers.findIndex(u => u.email === cleanEmail);
+        if (foundIdx !== -1) {
+          Object.assign(localUsers[foundIdx], updates);
+          localUsers[foundIdx].lastUpdated = new Date().toISOString();
+          localStorage.setItem("fitlife_local_users", JSON.stringify(localUsers));
+        }
+      }
+    } catch (e) {
+      console.error("Error parsing fitlife_local_users:", e);
     }
   }
 
@@ -205,5 +289,5 @@ window.dbUpdateUserStatus = async function(email, updates) {
       return false;
     }
   }
-  return false;
+  return true;
 };

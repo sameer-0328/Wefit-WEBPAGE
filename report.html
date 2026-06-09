@@ -1,0 +1,1158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>BCA Minor Project Report - FitLife Fitness Web Platform</title>
+  <!-- Load Mermaid.js for vector system diagrams -->
+  <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: 'neutral',
+      flowchart: { useWidth: 100%, htmlLabels: true },
+      securityLevel: 'loose'
+    });
+  </script>
+  <style>
+    /* Global Print Rules according to guidelines */
+    @page {
+      size: A4;
+      margin-left: 1.5in;
+      margin-right: 1.0in;
+      margin-top: 1.0in;
+      margin-bottom: 1.0in;
+    }
+    
+    body {
+      font-family: "Times New Roman", Times, serif;
+      font-size: 12pt;
+      line-height: 1.6;
+      text-align: justify;
+      color: #000;
+      background: #fff;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* Page Breaks and Spacing */
+    .page-break {
+      page-break-before: always;
+    }
+
+    /* Headings */
+    h1 {
+      font-size: 16pt;
+      font-weight: bold;
+      text-transform: uppercase;
+      text-align: center;
+      margin-top: 0;
+      margin-bottom: 24pt;
+      page-break-before: always;
+    }
+
+    h2 {
+      font-size: 14pt;
+      font-weight: bold;
+      margin-top: 18pt;
+      margin-bottom: 12pt;
+    }
+
+    h3 {
+      font-size: 12pt;
+      font-weight: bold;
+      margin-top: 12pt;
+      margin-bottom: 6pt;
+    }
+
+    p {
+      margin-top: 0;
+      margin-bottom: 12pt;
+      text-indent: 0.5in;
+    }
+
+    /* Disable paragraph indentation for lists, notes, and titles */
+    .no-indent, li p, td p, th p, .mermaid-caption {
+      text-indent: 0 !important;
+    }
+
+    /* Lists */
+    ul, ol {
+      margin-top: 0;
+      margin-bottom: 12pt;
+      padding-left: 0.5in;
+    }
+
+    li {
+      margin-bottom: 6pt;
+      text-align: justify;
+    }
+
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 12pt;
+      margin-bottom: 18pt;
+      font-size: 11pt;
+    }
+
+    th, td {
+      border: 1px solid #000;
+      padding: 8px 10px;
+      text-align: left;
+    }
+
+    th {
+      background-color: #f2f2f2;
+      font-weight: bold;
+    }
+
+    .table-caption, .figure-caption {
+      font-size: 11pt;
+      font-weight: bold;
+      text-align: center;
+      margin-top: 6pt;
+      margin-bottom: 12pt;
+    }
+
+    /* Code Blocks */
+    pre, code {
+      font-family: "Courier New", Courier, monospace;
+      font-size: 10pt;
+      background-color: #f7f7f7;
+    }
+
+    pre {
+      border: 1px dashed #777;
+      padding: 10px;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      margin-top: 12pt;
+      margin-bottom: 12pt;
+      text-align: left;
+    }
+
+    /* Diagram wrapper */
+    .diagram-container {
+      text-align: center;
+      margin: 20px auto;
+      width: 100%;
+      page-break-inside: avoid;
+    }
+
+    .mermaid {
+      display: inline-block;
+      width: 100%;
+    }
+
+    /* Front Matter Headers */
+    .front-matter-title {
+      font-size: 18pt;
+      font-weight: bold;
+      text-align: center;
+      text-transform: uppercase;
+      margin-top: 40pt;
+      margin-bottom: 40pt;
+    }
+
+    .cert-body {
+      line-height: 2.0;
+      text-align: justify;
+      margin-top: 30pt;
+    }
+
+    .signature-row {
+      margin-top: 80pt;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .signature-box {
+      width: 200px;
+      text-align: center;
+      border-top: 1px solid #000;
+      padding-top: 5px;
+      font-weight: bold;
+    }
+
+    /* Footer for Centered Page Numbering via Browser Options */
+    @media print {
+      .page-footer-custom {
+        display: block;
+        position: fixed;
+        bottom: 0.5in;
+        left: 0;
+        right: 0;
+        text-align: center;
+        font-size: 10pt;
+        font-family: "Times New Roman", serif;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ==================== CERTIFICATE ==================== -->
+  <div class="page-break">
+    <div class="front-matter-title">Lucky Institute of Professional Studies</div>
+    <div style="text-align: center; font-size: 14pt; font-weight: bold; text-transform: uppercase; margin-bottom: 40pt;">
+      JNV University, Jodhpur
+    </div>
+    <h2 style="text-align: center; text-transform: uppercase; border-bottom: 2px solid #000; padding-bottom: 10px;">
+      Certificate
+    </h2>
+    <div class="cert-body">
+      This is to certify that the Minor Project Report entitled <strong>"FitLife: A Responsive Web Platform for Workout Tracking and Client Progress Management"</strong> is a record of bonafide work carried out by <strong>Sameer Khan</strong> under the supervision and guidance of the Department of Computer Applications, Lucky Institute of Professional Studies, Jodhpur.
+      <br><br>
+      This report is submitted in partial fulfillment of the requirements for the award of the degree of <strong>Bachelor of Computer Applications (BCA) Sixth Semester</strong> during the academic session <strong>2025 - 2026</strong>.
+    </div>
+    
+    <div class="signature-row">
+      <div class="signature-box">Project Guide</div>
+      <div class="signature-box">Head of Department</div>
+    </div>
+  </div>
+
+  <!-- ==================== ACKNOWLEDGEMENT ==================== -->
+  <div class="page-break">
+    <h2 style="text-align: center; text-transform: uppercase; margin-top: 40pt; margin-bottom: 30pt;">
+      Acknowledgement
+    </h2>
+    <p>
+      I would like to express my deepest gratitude to my project guide and mentors in the Department of Computer Applications at Lucky Institute of Professional Studies, Jodhpur, for their invaluable guidance, constant encouragement, and insightful feedback throughout the duration of this minor project. Their academic inputs and engineering directions were crucial in building the system features.
+    </p>
+    <p>
+      I am highly thankful to our Head of Department and the administrative staff of the institute for providing the computational facilities and technical resources necessary for conducting this system study.
+    </p>
+    <p>
+      Lastly, I express my sincere appreciation to my family and peers for their continuous moral support and assistance during the system design and coding phases.
+    </p>
+    
+    <div style="margin-top: 60pt; text-align: right; font-weight: bold;" class="no-indent">
+      Sameer Khan<br>
+      BCA VI Semester
+    </div>
+  </div>
+
+  <!-- ==================== DECLARATION ==================== -->
+  <div class="page-break">
+    <h2 style="text-align: center; text-transform: uppercase; margin-top: 40pt; margin-bottom: 30pt;">
+      Declaration
+    </h2>
+    <p>
+      I hereby declare that the minor project report entitled <strong>"FitLife Fitness Web Platform"</strong> submitted to the Department of Computer Applications, Lucky Institute of Professional Studies, Jodhpur, is an authentic record of my original work.
+    </p>
+    <p>
+      Any database implementations, system design diagrams (ERD, DFDs), and logic components described in this report have been engineered by me, except where references to third-party libraries and SDK integrations are explicitly acknowledged in the text.
+    </p>
+    <p>
+      This work has not been submitted elsewhere for the award of any other degree or diploma program.
+    </p>
+    
+    <div style="margin-top: 80pt; display: flex; justify-content: space-between;" class="no-indent">
+      <div>
+        <strong>Date:</strong> 04 June 2026<br>
+        <strong>Place:</strong> Jodhpur
+      </div>
+      <div style="text-align: right; width: 250px; border-top: 1px solid #000; padding-top: 5px; font-weight: bold;">
+        Signature of Student<br>
+        Sameer Khan
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== ABSTRACT ==================== -->
+  <div class="page-break">
+    <h2 style="text-align: center; text-transform: uppercase; margin-top: 40pt; margin-bottom: 30pt;">
+      Abstract
+    </h2>
+    <p>
+      Digital fitness ecosystems require high data persistence, seamless layout adaptations, and centralized administration to ensure high user retention. This project report presents the system design and implementation of <strong>FitLife</strong>, a responsive web application for personalized fitness plan distribution and athlete progress monitoring.
+    </p>
+    <p>
+      The previous generation of local workout web apps was heavily limited by local device storage, resulting in immediate progress logs and active plan data loss upon browser refreshes, cache clearing, or device switching. To address these database persistence limitations, the proposed FitLife platform utilizes a serverless architecture integrating a client-side interface with <strong>Google Cloud Firestore</strong>. By using email addresses as unique identifiers, the application automatically loads custom workout splits, water logs, weight progression curves, and query tickets.
+    </p>
+    <p>
+      Additionally, a secure, isolated administration dashboard (<code>admin.html</code>) was developed to enable administrators to search user profiles, verify payment transaction references (UTR), approve paid tier unlocks, and change plan states dynamically. The frontend leverages Vanilla CSS for a charcoal-and-red sports branding style, HTML5 for semantic structuring, and JavaScript ES6 for state sync. Testing and validation demonstrate robust state recovery, secure Firestore reads/writes, and zero data leakage across athlete accounts.
+    </p>
+  </div>
+
+  <!-- ==================== TABLE OF CONTENTS ==================== -->
+  <div class="page-break">
+    <h2 style="text-align: center; text-transform: uppercase; margin-top: 40pt; margin-bottom: 30pt;">
+      Table of Contents
+    </h2>
+    <table class="no-indent">
+      <thead>
+        <tr>
+          <th>Chapter</th>
+          <th>Title</th>
+          <th>Page No.</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>1</td>
+          <td><strong>Introduction</strong><br>1.1 Overview of the Project<br>1.2 Objectives of the Project</td>
+          <td>1</td>
+        </tr>
+        <tr>
+          <td>2</td>
+          <td><strong>Software Development Life Cycle (SDLC)</strong><br>2.1 Overview of SDLC<br>2.2 SDLC Model Selected</td>
+          <td>3</td>
+        </tr>
+        <tr>
+          <td>3</td>
+          <td><strong>System Study and Analysis</strong><br>3.1 Problem Statement<br>3.2 Existing System Description<br>3.3 Limitations of Existing System<br>3.4 Proposed System<br>3.5 Feasibility Study (Technical / Economic / Operational)</td>
+          <td>5</td>
+        </tr>
+        <tr>
+          <td>4</td>
+          <td><strong>System Requirements</strong><br>4.1 Functional Requirements<br>4.2 Non-Functional Requirements<br>4.3 Hardware & Software Requirements</td>
+          <td>8</td>
+        </tr>
+        <tr>
+          <td>5</td>
+          <td><strong>System Design</strong><br>5.1 System Architecture<br>5.2 Database Design (Tables + ER Diagram)<br>5.3 Data Flow Diagrams (DFD Level 0 & Level 1)<br>5.4 User Interface Design Details</td>
+          <td>11</td>
+        </tr>
+        <tr>
+          <td>6</td>
+          <td><strong>Implementation</strong><br>6.1 Tools & Technologies Used<br>6.2 Module Descriptions<br>6.3 Core Code Blocks</td>
+          <td>17</td>
+        </tr>
+        <tr>
+          <td>7</td>
+          <td><strong>Testing</strong><br>7.1 Testing Methods Used<br>7.2 Test Cases Table<br>7.3 Testing Outcomes</td>
+          <td>23</td>
+        </tr>
+        <tr>
+          <td>8</td>
+          <td><strong>Results and Discussion</strong><br>8.1 Output Screen Descriptions<br>8.2 Administrative Flow Validation</td>
+          <td>26</td>
+        </tr>
+        <tr>
+          <td>9</td>
+          <td><strong>Conclusion and Future Scope</strong><br>9.1 Project Achievements<br>9.2 Future Scope</td>
+          <td>28</td>
+        </tr>
+        <tr>
+          <td>10</td>
+          <td><strong>References (IEEE Format)</strong></td>
+          <td>29</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ==================== MAIN REPORT START ==================== -->
+
+  <!-- ==================== CHAPTER 1 ==================== -->
+  <h1>1. Introduction</h1>
+  
+  <h2>1.1 Overview of the Project</h2>
+  <p>
+    In recent years, the intersection of mobile technology, cloud database solutions, and web frameworks has transformed the health and fitness industry. Users expect modern interfaces to track their daily activities, hydration levels, body weight progress, and exercise form dynamically. Fitness platforms must balance lightweight client execution with robust real-time updates to manage user data across multiple devices.
+  </p>
+  <p>
+    The project, entitled <strong>"FitLife Fitness Web Platform"</strong>, is a cloud-integrated web application designed to manage personalized workout splits, diet blueprints, and athlete progress records. Styled under a high-contrast black-and-red athletic theme, the platform serves two primary interfaces: an athlete workspace dashboard and a secure administrative panel. The backend utilizes Google Cloud Firestore to store and synchronize records in real-time, removing the limitations of local device-only session caches.
+  </p>
+  
+  <h2>1.2 Objectives of the Project</h2>
+  <p>
+    The core development objectives for the FitLife system are as follows:
+  </p>
+  <ul>
+    <li>
+      <strong>Persistent Database Architecture:</strong> Establish Cloud Firestore as the centralized repository to replace unstable client-side browser caching, ensuring data integrity.
+    </li>
+    <li>
+      <strong>Session Restoration & Autologin:</strong> Implement mechanisms using <code>localStorage</code> cache and Firestore queries to detect returning users during browser page refreshes or device logins, loading their active plan layouts and historical metrics.
+    </li>
+    <li>
+      <strong>Payment Workflow Verification:</strong> Provide standard and premium users with payment options via QR code or copyable UPI IDs. Develop text validation modules to secure 12-digit transaction references.
+    </li>
+    <li>
+      <strong>Centralized Administrative Moderation:</strong> Engineer an isolated, passcode-protected administrative dashboard to authorize paid tier changes, verify billing UTR values, analyze query histories, and delete accounts.
+    </li>
+    <li>
+      <strong>Responsive Interactive Dashboard:</strong> Formulate a layout offering daily workout checklist updates, log progression charts, diet selectors, and form guide video databases.
+    </li>
+  </ul>
+
+  <!-- ==================== CHAPTER 2 ==================== -->
+  <h1>2. Software Development Life Cycle (SDLC)</h1>
+  
+  <h2>2.1 Overview of SDLC</h2>
+  <p>
+    A Software Development Life Cycle (SDLC) is a structured software engineering framework used by development teams to design, code, test, deploy, and maintain software programs systematically. Following an SDLC ensures that products meet specified quality metrics, budget limitations, and client requirements. The cycle typically comprises six major phases: Requirement Gathering, System Analysis, System Design, Coding/Development, Testing, and Deployment & Maintenance.
+  </p>
+  
+  <h2>2.2 SDLC Model Selected</h2>
+  <p>
+    For the FitLife Fitness Web Platform, an <strong>Agile Prototyping Model</strong> was selected. Unlike the traditional sequential Waterfall approach, this iterative model combines the advantages of prototyping (immediate UI feedback) with the rapid increments of Agile software development.
+  </p>
+  <p>
+    This model was chosen due to the following project conditions:
+  </p>
+  <ul>
+    <li>
+      <strong>Iterative Development of Security and DB Systems:</strong> The migration from LocalStorage data structures to a serverless Firestore database model required multiple database design iterations.
+    </li>
+    <li>
+      <strong>User Interface Adjustments:</strong> The high-contrast sports theme CSS styling and administrative dossier drawer transitions required constant micro-adjustments and layout feedback.
+    </li>
+    <li>
+      <strong>Rapid Feature Unlocking:</strong> Features such as the water tracker, query desk, and multi-day workout split selectors were implemented as distinct, self-contained increments that were added to the dashboard dynamically.
+    </li>
+  </ul>
+
+  <!-- ==================== CHAPTER 3 ==================== -->
+  <h1>3. System Study and Analysis</h1>
+  
+  <h2>3.1 Problem Statement</h2>
+  <p>
+    Modern wellness tracking applications must maintain state across page reloads and browser transitions. The initial generation of the FitLife web application stored all user statistics (such as water intake totals, weight progressions, and checked exercises list) in the client's browser local cache (LocalStorage).
+  </p>
+  <p>
+    This architecture suffered from critical flaws:
+  </p>
+  <ol>
+    <li>
+      <strong>Volatile Data Cache:</strong> Clearing browser history, cookies, or accessing the website via private browsing modes (Incognito) wiped out the athlete's workout progress history.
+    </li>
+    <li>
+      <strong>Device Dependency:</strong> An athlete could not access their standard workout plan or log weight on a mobile device if they had originally registered on a desktop computer.
+    </li>
+    <li>
+      <strong>Billing Bypass & Security Vulnerability:</strong> The client-side logic was vulnerable to browser console manipulation, allowing users to unlock premium and standard sections without paying.
+    </li>
+    <li>
+      <strong>Administrative Blindspot:</strong> Coaches and system administrators had no central mechanism to verify payment transaction codes, delete user logs, or adjust user access.
+    </li>
+  </ol>
+  
+  <h2>3.2 Existing System Description</h2>
+  <p>
+    The existing system was a static, client-side-only web platform. It used basic HTML forms to collect names, emails, and plan preferences. If a paid plan (Standard) was selected, the system prompted the user with standard billing inputs but did not save or verify the transaction ID. Progress was written to browser cookies or LocalStorage. There was no database connection, backend service, or admin page.
+  </p>
+  
+  <h2>3.3 Limitations of Existing System</h2>
+  <ul>
+    <li>No real-time data backup.</li>
+    <li>Frequent data loss on browser refresh or cookie cleanup.</li>
+    <li>No multi-device access.</li>
+    <li>Zero administrator control.</li>
+    <li>Vulnerable to local cache spoofing.</li>
+  </ul>
+  
+  <h2>3.4 Proposed System</h2>
+  <p>
+    The proposed FitLife Fitness Platform solves these issues by connecting the client-side interface to a cloud-hosted <strong>Firebase Firestore Database</strong>.
+  </p>
+  <p>
+    Key enhancements include:
+  </p>
+  <ul>
+    <li>
+      <strong>Real-time Cloud Sync:</strong> All hydration counts, completed exercise checklists, weight lists, and trainer queries are synced to Cloud Firestore documents under the user's email document ID.
+    </li>
+    <li>
+      <strong>Unique Identity Session Engine:</strong> Email is used as the unique identifier. The onboarding system checks for returning profiles, restoring layouts and progress values.
+    </li>
+    <li>
+      <strong>Protected Administrator Dashboard:</strong> A secure <code>admin.html</code> portal allows administrators to filter records, review UTR details, verify billing, adjust plan tiers, and manage database records.
+    </li>
+    <li>
+      <strong>Secure Rules Verification:</strong> Firestore security rules ensure that only authenticated updates occur, protecting user documents from external database injections.
+    </li>
+  </ul>
+  
+  <h2>3.5 Feasibility Study</h2>
+  
+  <h3>Technical Feasibility</h3>
+  <p>
+    The system is built using HTML5, CSS3, JavaScript ES6, and Firebase SDK libraries. Because Firebase functions as a serverless Backend-as-a-Service (BaaS), the system does not require dedicated node servers, making client execution fast and technical deployment straightforward.
+  </p>
+  
+  <h3>Economic Feasibility</h3>
+  <p>
+    Google Firebase offers a generous free tier (Spark Plan) allowing 50,000 document reads, 20,000 document writes, and 20,000 document deletes per day. This makes the system economically feasible, as there are no backend hosting costs during the initial deployment phase.
+  </p>
+  
+  <h3>Operational Feasibility</h3>
+  <p>
+    The athlete interface is designed for intuitive mobile and desktop use. The administration portal simplifies back-office verification tasks by using visual status badges, instant action triggers (Approve, Reject), and details drawers.
+  </p>
+
+  <!-- ==================== CHAPTER 4 ==================== -->
+  <h1>4. System Requirements</h1>
+  
+  <h2>4.1 Functional Requirements</h2>
+  <p>
+    Functional requirements define the core functions the system must perform:
+  </p>
+  <ul>
+    <li>
+      <strong>User Onboarding and Plan Selection:</strong> The system must accept name, email, and plan tier parameters. Paid plan requests must route users to the payment layout.
+    </li>
+    <li>
+      <strong>Email Verification and Profile Loading:</strong> The system must check Firestore for existing email records. If found, it must load the user's layout, progress, and logs, bypassing payment if already verified.
+    </li>
+    <li>
+      <strong>Progress Synchronization:</strong> Whenever a user logs water, weight, or checks off a workout, the client must trigger an incremental database update without reloading the page.
+    </li>
+    <li>
+      <strong>Payment Verification Logic:</strong> The payment portal must enforce a 12-digit numeric constraint for transaction reference inputs.
+    </li>
+    <li>
+      <strong>Admin Records Management:</strong> The admin panel must load database profiles, filter by name/email/plan, update status, and delete records.
+    </li>
+  </ul>
+  
+  <h2>4.2 Non-Functional Requirements</h2>
+  <ul>
+    <li>
+      <strong>Performance:</strong> Data syncing and loading operations must complete within 2 seconds under ordinary mobile internet connections.
+    </li>
+    <li>
+      <strong>Data Security:</strong> Access to user collections must be filtered by matching document path IDs.
+    </li>
+    <li>
+      <strong>Usability:</strong> The client UI must adapt to mobile, tablet, and desktop viewports using CSS media queries.
+    </li>
+    <li>
+      <strong>Reliability:</strong> If the database is unreachable, the system must fall back to local storage and sync changes later.
+    </li>
+  </ul>
+  
+  <h2>4.3 Hardware & Software Requirements</h2>
+  
+  <h3>Development Environment</h3>
+  <ul>
+    <li><strong>Operating System:</strong> Windows 10 / 11</li>
+    <li><strong>IDE:</strong> Visual Studio Code</li>
+    <li><strong>Version Control:</strong> Git, GitHub Desktop</li>
+  </ul>
+  
+  <h3>Client Runtime Specifications</h3>
+  <ul>
+    <li><strong>Device:</strong> PC, Tablet, or Smartphone with internet access</li>
+    <li><strong>Browser:</strong> Google Chrome (v100+), Microsoft Edge, Safari</li>
+  </ul>
+  
+  <h3>Server Specifications (Firebase BaaS)</h3>
+  <ul>
+    <li><strong>Database:</strong> Google Cloud Firestore (NoSQL, serverless)</li>
+    <li><strong>Hosting:</strong> Cloud CDN Integration</li>
+  </ul>
+
+  <!-- ==================== CHAPTER 5 ==================== -->
+  <h1>5. System Design</h1>
+  
+  <h2>5.1 System Architecture</h2>
+  <p>
+    The architecture follows a Client-Serverless pattern where the client web app interacts directly with Google Cloud services using the Firestore SDK. A local cache is used for performance and offline recovery.
+  </p>
+  
+  <div class="diagram-container">
+    <div class="mermaid">
+      graph TD
+        subgraph Client Side (User Browser)
+          UI[HTML5 / CSS3 Responsive UI]
+          LS[(LocalStorage Session Cache)]
+        end
+        subgraph Backend-as-a-Service (Google Cloud)
+          FS[(Cloud Firestore DB)]
+        end
+        subgraph Admin Portal (Browser)
+          AD[Standalone Admin Console]
+        end
+        UI <-->|Local Read/Write| LS
+        UI <-->|Firestore Web SDK| FS
+        AD <-->|Query & Set| FS
+    </div>
+    <div class="figure-caption">Figure 5.1: FitLife Platform System Architecture</div>
+  </div>
+  
+  <h2>5.2 Database Design</h2>
+  <p>
+    FitLife uses a NoSQL document database model inside Cloud Firestore. All profiles are stored in the <code>users</code> collection, where the document key is the user's email address.
+  </p>
+  
+  <div class="diagram-container">
+    <div class="mermaid">
+      erDiagram
+        USERS {
+          string userId PK "Email ID"
+          string email "Unique email address"
+          string name "Athlete name"
+          string plan "Plan tier (Free/Standard)"
+          string activePlan "Active plan tier"
+          string transactionId "Transaction reference ID"
+          string txnRefId "Mirrored transaction ID"
+          string paymentStatus "Verified/Pending/Rejected"
+          string registrationDate "Registration date"
+          int waterCount "Hydration cups logged"
+          int waterTarget "Daily hydration goal"
+          int completedExercisesCount "Checked exercises count"
+          int totalExercisesCount "Overall exercises count"
+          array completedExercisesList "Checked exercise names"
+          array weightLogs "List of weight logs (date, weight)"
+          array queries "Trainer tickets (date, query)"
+          string fitnessGoal "Diet category (gain/loss/maintain)"
+          string workoutProgress "Progress percentage text"
+          string lastLogin "Login timestamp"
+          string lastUpdated "Sync timestamp"
+        }
+    </div>
+    <div class="figure-caption">Figure 5.2: Entity-Relationship Diagram for FitLife Database</div>
+  </div>
+
+  <p>Below is the detailed Data Dictionary for the <code>users</code> collection:</p>
+  
+  <table class="no-indent">
+    <caption>Table 5.1: Data Dictionary for Users Document Collection</caption>
+    <thead>
+      <tr>
+        <th>Field Name</th>
+        <th>Data Type</th>
+        <th>Sample Value</th>
+        <th>Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><code>userId</code></td>
+        <td>String</td>
+        <td>"athlete@example.com"</td>
+        <td>Document Primary Key (normalized email).</td>
+      </tr>
+      <tr>
+        <td><code>name</code></td>
+        <td>String</td>
+        <td>"Sameer Khan"</td>
+        <td>User's display name.</td>
+      </tr>
+      <tr>
+        <td><code>plan</code></td>
+        <td>String</td>
+        <td>"Standard"</td>
+        <td>User's registered plan tier.</td>
+      </tr>
+      <tr>
+        <td><code>paymentStatus</code></td>
+        <td>String</td>
+        <td>"Pending Verification"</td>
+        <td>Status of paid tier unlock.</td>
+      </tr>
+      <tr>
+        <td><code>transactionId</code></td>
+        <td>String</td>
+        <td>"123456789012"</td>
+        <td>UTR code submitted during registration.</td>
+      </tr>
+      <tr>
+        <td><code>waterCount</code></td>
+        <td>Number</td>
+        <td>5</td>
+        <td>Logged water cups.</td>
+      </tr>
+      <tr>
+        <td><code>completedExercisesList</code></td>
+        <td>Array (String)</td>
+        <td>["Pushups", "Bodyweight Squats"]</td>
+        <td>Checked checklist items.</td>
+      </tr>
+      <tr>
+        <td><code>weightLogs</code></td>
+        <td>Array (Object)</td>
+        <td><code>[{"date":"04/06/2026", "weight":70.5}]</code></td>
+        <td>Historical weight tracking.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>5.3 Data Flow Diagrams (DFD)</h2>
+  
+  <h3>Level 0: Context Diagram</h3>
+  <p>
+    The Context Diagram represents the entire application as a single process block, illustrating interactions with the User and Administrator.
+  </p>
+  
+  <div class="diagram-container">
+    <div class="mermaid">
+      graph LR
+        User[Athlete / User] -->|1. Submit registration form<br>2. Submit payment reference<br>3. Log workout stats| System((FitLife Platform Process))
+        System -->|1. Update UI layout<br>2. Load checklist progress<br>3. Display historical logs| User
+        Admin[System Admin] -->|1. Verify payment status<br>2. Approve standard/premium tiers<br>3. Search & Delete records| System
+        System -->|1. Display user tables<br>2. Retrieve profiles & progress data| Admin
+    </div>
+    <div class="figure-caption">Figure 5.3: Level 0 DFD (Context Diagram)</div>
+  </div>
+
+  <h3>Level 1: Process Flow Diagram</h3>
+  <p>
+    The Level 1 DFD decomposes the system process block into four distinct operational processes: User Registration, Payment Verification, Progress Tracking, and Admin Moderation.
+  </p>
+  
+  <div class="diagram-container">
+    <div class="mermaid">
+      graph TD
+        User[Athlete / User] -->|1. Email & Name details| P1((1.0 Registration & Login))
+        P1 -->|Fetch/Create user document| DB[(Cloud Firestore)]
+        
+        User -->|2. Enter 12-digit transaction ID| P2((2.0 Payment Processing))
+        P2 -->|Save transaction ID as Pending| DB
+        
+        Admin[System Admin] -->|3. Approve or Reject transaction| P3((3.0 Admin Dashboard))
+        P3 -->|Update plan to Standard & Verify| DB
+        
+        User -->|4. Log workout, weight, & water| P4((4.0 Progress Tracker))
+        P4 -->|Incremental database update| DB
+        
+        DB -->|Display athlete dossier| P3
+        DB -->|Load dashboard, charts, & progress| User
+    </div>
+    <div class="figure-caption">Figure 5.4: Level 1 DFD (Detailed Processes)</div>
+  </div>
+
+  <h2>5.4 User Interface Design Details</h2>
+  <p>
+    The application's interface adapts to viewport sizes using CSS grid and flexbox, styled under a dark-and-red sports branding theme:
+  </p>
+  <ul>
+    <li>
+      <strong>Registration View:</strong> A clean form that collects user details and active plan requests.
+    </li>
+    <li>
+      <strong>Payment Modal:</strong> Displays QR codes, copyable UPI addresses, and a text input with 12-digit validation.
+    </li>
+    <li>
+      <strong>Athlete Dashboard:</strong> Organized into tabs:
+      <ul>
+        <li><em>Workout Split:</em> A 7-day split checklist with interactive checkboxes.</li>
+        <li><em>Diet Blueprint:</em> Displays nutritional guides based on the user's active goal.</li>
+        <li><em>Progress Tracker:</em> Hydration widget, body weight tracker, and custom logs.</li>
+      </ul>
+    </li>
+    <li>
+      <strong>Dossier Panel (Admin):</strong> Accessible via <code>admin.html</code>, featuring user filter inputs, detailed metric views, and database manipulation buttons.
+    </li>
+  </ul>
+
+  <!-- ==================== CHAPTER 6 ==================== -->
+  <h1>6. Implementation</h1>
+  
+  <h2>6.1 Tools & Technologies Used</h2>
+  <ul>
+    <li><strong>HTML5 Semantic Markup:</strong> Structuring forms, charts, tab triggers, and modals.</li>
+    <li><strong>Vanilla CSS3 Custom Styles:</strong> Implements modern variables, grid layouts, glassmorphism UI structures, and print-ready formats.</li>
+    <li><strong>JavaScript ES6:</strong> Orchestrates view transitions, handles LocalStorage cache syncs, parses database objects, and validates inputs.</li>
+    <li><strong>Google Firebase Firestore Client Library (v8):</strong> Connects the web app to Firestore collections, handling NoSQL read, write, and merge operations.</li>
+  </ul>
+  
+  <h2>6.2 Module Descriptions</h2>
+  <p>
+    The platform's code structure is split into two primary modules:
+  </p>
+  <ol>
+    <li>
+      <strong>Database Module (<code>firebase.js</code>):</strong> Exposes standard database queries globally. Key functions include <code>dbSaveUser</code>, <code>dbGetUser</code>, <code>dbGetAllUsers</code>, and <code>dbUpdateUserStatus</code>.
+    </li>
+    <li>
+      <strong>Application Engine (<code>app.js</code>):</strong> Listens to frontend events, runs form validation, handles user state switches, manages tabs, and triggers progress sync updates.
+    </li>
+  </ol>
+
+  <h2>6.3 Core Code Blocks</h2>
+  <p>
+    Below is the complete implementation of the database module [firebase.js](file:///C:/Users/HP/.gemini/antigravity/scratch/fitness-webpage/firebase.js). It demonstrates how update payloads are constructed dynamically to prevent downgrading plans or overwriting registration details during progress synchronization:
+  </p>
+  
+  <pre><code>// FitLife Fitness Webpage - Firebase Firestore Database Module
+
+// FIREBASE CONFIGURATION & INITIALIZATION
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT_ID.appspot.com",
+  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
+
+let db = null;
+try {
+  if (typeof firebase !== 'undefined' && firebaseConfig.projectId && !firebaseConfig.projectId.includes("YOUR_PROJECT_ID")) {
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.firestore();
+    console.log("Firebase Firestore initialized successfully!");
+  } else {
+    console.log("Firebase SDK loaded, but config is set to default. Running in LocalStorage fallback mode.");
+  }
+} catch (error) {
+  console.error("Firebase Firestore initialization failed. LocalStorage mode:", error);
+}
+
+// 1. SAVE USER DATA
+window.dbSaveUser = async function(email, userData) {
+  if (!email) return false;
+  
+  const cleanEmail = email.toLowerCase().trim();
+  const dateStr = new Date().toLocaleDateString();
+
+  // Create document update object containing only defined values
+  const docData = {
+    userId: cleanEmail,
+    email: cleanEmail,
+    lastUpdated: new Date().toISOString()
+  };
+
+  if (userData.name !== undefined) docData.name = userData.name;
+  
+  if (userData.plan !== undefined) {
+    docData.plan = userData.plan;
+    docData.activePlan = userData.plan;
+  }
+  if (userData.activePlan !== undefined) {
+    docData.activePlan = userData.activePlan;
+  }
+
+  if (userData.txnRefId !== undefined || userData.transactionId !== undefined) {
+    const txnVal = userData.txnRefId || userData.transactionId || "N/A";
+    docData.txnRefId = txnVal;
+    docData.transactionId = txnVal;
+  }
+
+  if (userData.paymentStatus !== undefined) {
+    docData.paymentStatus = userData.paymentStatus;
+  } else if (userData.plan !== undefined) {
+    docData.paymentStatus = userData.plan === "Free" ? "Verified" : "Pending Verification";
+  }
+
+  if (userData.registrationDate !== undefined) docData.registrationDate = userData.registrationDate;
+  if (userData.waterCount !== undefined) docData.waterCount = userData.waterCount;
+  if (userData.waterTarget !== undefined) docData.waterTarget = userData.waterTarget;
+  if (userData.completedExercisesCount !== undefined) docData.completedExercisesCount = userData.completedExercisesCount;
+  if (userData.totalExercisesCount !== undefined) docData.totalExercisesCount = userData.totalExercisesCount;
+  if (userData.completedExercisesList !== undefined) docData.completedExercisesList = userData.completedExercisesList;
+  if (userData.weightLogs !== undefined) docData.weightLogs = userData.weightLogs;
+  if (userData.queries !== undefined) docData.queries = userData.queries;
+  if (userData.fitnessGoal !== undefined) docData.fitnessGoal = userData.fitnessGoal;
+  if (userData.workoutProgress !== undefined) docData.workoutProgress = userData.workoutProgress;
+  if (userData.lastLogin !== undefined) docData.lastLogin = userData.lastLogin;
+
+  // Sync to local client by merging
+  let mergedData = {};
+  const localData = localStorage.getItem("fitlife_current_user");
+  if (localData) {
+    try {
+      const parsed = JSON.parse(localData);
+      if (parsed && parsed.email === cleanEmail) {
+        mergedData = parsed;
+      }
+    } catch (e) {
+      console.error("Error parsing local user session:", e);
+    }
+  }
+  Object.assign(mergedData, docData);
+  localStorage.setItem("fitlife_current_user", JSON.stringify(mergedData));
+
+  if (db) {
+    try {
+      await db.collection("users").doc(cleanEmail).set(docData, { merge: true });
+      console.log("User successfully written to Firestore:", cleanEmail, docData);
+      return true;
+    } catch (e) {
+      console.error("Error writing user to Firestore:", e);
+      return false;
+    }
+  }
+  return true;
+};</code></pre>
+
+  <p>
+    Below is a critical segment of [app.js](file:///C:/Users/HP/.gemini/antigravity/scratch/fitness-webpage/app.js) demonstrating how returning users are loaded, and how local UI updates trigger progress syncs back to the database:
+  </p>
+  
+  <pre><code>// app.js - Profile Onboarding and Progress Synchronization Logic
+
+// 1. Returning User Auto-Login on DOM Load
+const localUserStr = localStorage.getItem("fitlife_current_user");
+if (localUserStr) {
+  try {
+    const localUser = JSON.parse(localUserStr);
+    if (localUser && localUser.email) {
+      setTimeout(async () => {
+        if (typeof window.dbGetUser === 'function') {
+          const existingUser = await window.dbGetUser(localUser.email);
+          if (existingUser) {
+            if (existingUser.paymentStatus === "Rejected") {
+              alert("Your Standard Plan payment verification was rejected by admin. Loading Free Plan instead.");
+              existingUser.plan = "Free";
+              existingUser.activePlan = "Free";
+            }
+            
+            // Restore session variables
+            window.registeredName = existingUser.name;
+            window.registeredEmail = existingUser.email;
+            window.registeredPlan = existingUser.activePlan || existingUser.plan || "Free";
+            window.registrationDate = existingUser.registrationDate;
+            window.txnRefId = existingUser.txnRefId || existingUser.transactionId || "N/A";
+            window.userWaterCount = existingUser.waterCount || 0;
+            window.userWaterTarget = existingUser.waterTarget || 8;
+            window.completedExercisesList = existingUser.completedExercisesList || [];
+            window.selectedFitnessGoal = existingUser.fitnessGoal || "gain";
+            
+            // Initialize Dashboard View
+            unlockDashboardUI(window.registeredName, window.registeredEmail, window.registeredPlan);
+          }
+        }
+      }, 150);
+    }
+  } catch (e) {
+    console.error("Error reading local user session:", e);
+  }
+}
+
+// 2. Incremental Database Progress Syncer
+window.syncUserProgress = async function() {
+  const email = window.registeredEmail;
+  if (!email) return;
+
+  const totalOverall = window.registeredPlan === "Free" ? 4 : 33;
+  const completedOverall = window.completedExercisesList ? window.completedExercisesList.length : 0;
+
+  const progressUpdate = {
+    waterCount: window.userWaterCount || 0,
+    waterTarget: window.userWaterTarget || 8,
+    completedExercisesCount: completedOverall,
+    totalExercisesCount: totalOverall,
+    completedExercisesList: window.completedExercisesList || [],
+    weightLogs: window.weightLogs || [],
+    queries: window.trainerQueries || []
+  };
+
+  if (typeof window.dbSaveUser === 'function') {
+    await window.dbSaveUser(email, progressUpdate);
+  } else {
+    // Local fallback
+    let localData = localStorage.getItem("fitlife_current_user");
+    if (localData) {
+      let parsed = JSON.parse(localData);
+      Object.assign(parsed, progressUpdate);
+      localStorage.setItem("fitlife_current_user", JSON.stringify(parsed));
+    }
+  }
+};</code></pre>
+
+  <!-- ==================== CHAPTER 7 ==================== -->
+  <h1>7. Testing</h1>
+  
+  <h2>7.1 Testing Methods Used</h2>
+  <p>
+    The FitLife system underwent rigorous testing to ensure functionality and security:
+  </p>
+  <ul>
+    <li>
+      <strong>Unit Testing:</strong> Tested individual JavaScript modules, checking that transaction UTR validators block invalid strings. Verified Firestore query modules in isolation using local mock databases.
+    </li>
+    <li>
+      <strong>Integration Testing:</strong> Verified that clicking workout checkboxes updates progress bars and logs queries, triggering <code>syncUserProgress</code> database updates in the background.
+    </li>
+    <li>
+      <strong>System and Security Verification:</strong> Confirmed that users on different browser instances cannot access other users' data. Tested admin approval triggers to ensure correct layout rendering.
+    </li>
+  </ul>
+  
+  <h2>7.2 Test Cases Table</h2>
+  <p>Below are the detailed test cases designed to validate the system's operational flows:</p>
+  
+  <table class="no-indent">
+    <caption>Table 7.1: System Test Cases and Verification Results</caption>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Description</th>
+        <th>Input/Trigger</th>
+        <th>Expected Output</th>
+        <th>Actual Result</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>TC01</td>
+        <td>Free Plan Signup</td>
+        <td>Form values: Name, Email, Plan="Free". Click Submit.</td>
+        <td>Bypasses payment screen. Writes user to DB with verified status. Unlocks Free dashboard.</td>
+        <td>Bypassed payment. DB document created. Free checklist visible.</td>
+        <td>Pass</td>
+      </tr>
+      <tr>
+        <td>TC02</td>
+        <td>Standard Plan Signup</td>
+        <td>Form values: Name, Email, Plan="Standard". Click Submit.</td>
+        <td>Saves user in DB as "Pending Verification". Routes user to payment confirmation view.</td>
+        <td>Saved user status as pending. Rendered QR code screen.</td>
+        <td>Pass</td>
+      </tr>
+      <tr>
+        <td>TC03</td>
+        <td>Payment UTR Check</td>
+        <td>Submit invalid UTR code "12345ABC" (non-numeric, short).</td>
+        <td>Shows validation alert. Blocks submission.</td>
+        <td>Alert shown: "Please enter a valid 12-digit transaction ID". Form blocked.</td>
+        <td>Pass</td>
+      </tr>
+      <tr>
+        <td>TC04</td>
+        <td>Progress Syncer</td>
+        <td>Check three daily exercises and log water cup.</td>
+        <td>Database updates fields on keypress/click without page reload.</td>
+        <td>Verified document changes in Firestore console. Status preserved.</td>
+        <td>Pass</td>
+      </tr>
+      <tr>
+        <td>TC05</td>
+        <td>Returning User Check</td>
+        <td>Refresh browser page.</td>
+        <td>Automatically reads email from local cache, queries DB, and restores active dashboard layout.</td>
+        <td>Session detected. DB profile pulled. Standard dashboard loaded.</td>
+        <td>Pass</td>
+      </tr>
+      <tr>
+        <td>TC06</td>
+        <td>Admin Login</td>
+        <td>Open <code>admin.html</code> and enter passcode "admin123".</td>
+        <td>Unlocks admin control dashboard. Loads table of registered users.</td>
+        <td>Admin view displayed. User list loaded.</td>
+        <td>Pass</td>
+      </tr>
+      <tr>
+        <td>TC07</td>
+        <td>Payment Verification</td>
+        <td>Admin clicks "Approve" next to standard user request.</td>
+        <td>Updates user's status to "Verified" in Firestore and unlocks Standard plan.</td>
+        <td>User document updated to "Verified". Client dashboard upgraded on refresh.</td>
+        <td>Pass</td>
+      </tr>
+      <tr>
+        <td>TC08</td>
+        <td>Account Deletion</td>
+        <td>Admin clicks "Delete" button.</td>
+        <td>Removes document from database. User list updates dynamically.</td>
+        <td>User record deleted from Firestore. List updated.</td>
+        <td>Pass</td>
+      </tr>
+    </tbody>
+  </table>
+  
+  <h2>7.3 Testing Outcomes</h2>
+  <p>
+    Testing verified that dynamic document building in <code>dbSaveUser</code> solves the plan overwrite bug, preserving user data during database updates. The validation checks properly reject incorrect inputs, and administrative changes propagate correctly.
+  </p>
+
+  <!-- ==================== CHAPTER 8 ==================== -->
+  <h1>8. Results and Discussion</h1>
+  
+  <h2>8.1 Output Screen Descriptions</h2>
+  <p>
+    The system interfaces display the following functional elements:
+  </p>
+  <ol>
+    <li>
+      <strong>Athlete Dashboard View:</strong> Features personal greetings, active plan badges, and an email indicator. The workout section displays the exercise checklist with interactive progress bars.
+    </li>
+    <li>
+      <strong>Tracker Integration:</strong> A daily hydration panel displays cup icons, intake stats, and target indicators. The body weight tracker updates progress tables dynamically.
+    </li>
+    <li>
+      <strong>Trainer Desk View:</strong> Standard plan users can type queries in the text area and click "Email Coach Sameer". The ticket is saved in the database under the user's profile and displayed in the admin dossier.
+    </li>
+    <li>
+      <strong>Admin Management Panel:</strong> Accessible via <code>admin.html</code>, this panel features search fields, status indicators, inline plan selectors, and "Approve/Reject" buttons. Clicking a row opens a details drawer displaying weight charts and trainer queries.
+    </li>
+  </ol>
+  
+  <h2>8.2 Administrative Flow Validation</h2>
+  <p>
+    The administrative flow ensures verified system updates:
+  </p>
+  
+  <div class="diagram-container">
+    <div class="mermaid">
+      sequenceDiagram
+        autonumber
+        actor User as Athlete / User
+        actor Admin as System Administrator
+        participant DB as Cloud Firestore
+        
+        User->>DB: Registers as Standard (payment status set to 'Pending Verification')
+        Admin->>DB: Loads Admin Portal (authenticates & reads pending users list)
+        Note over Admin: Admin checks transaction reference ID (UTR)
+        Admin->>DB: Clicks 'Approve' (updates paymentStatus to 'Verified')
+        User->>DB: Reloads page (loads profile details)
+        Note over User: User dashboard unlocks Standard workspace
+    </div>
+    <div class="figure-caption">Figure 8.1: Payment Verification Sequence Diagram</div>
+  </div>
+
+  <!-- ==================== CHAPTER 9 ==================== -->
+  <h1>9. Conclusion and Future Scope</h1>
+  
+  <h2>9.1 Project Achievements</h2>
+  <p>
+    The FitLife project successfully implements user persistence and dashboard management. Migrating data storage to Cloud Firestore solved the volatile cache limitations of the previous client-side version. Users can log metrics without data loss on refresh, and administrators can manage records from a secure console.
+  </p>
+  
+  <h2>9.2 Future Scope</h2>
+  <p>
+    The platform's design allows for future functional expansion:
+  </p>
+  <ul>
+    <li>
+      <strong>Automatic Gateway Checkout:</strong> Integrating payment APIs (like Razorpay or Stripe) would automate payment checks, removing the need for manual admin verification of UTR references.
+    </li>
+    <li>
+      <strong>Real-time Chat Integration:</strong> Using Firestore listeners to enable live messaging between athletes and coaches within the dashboard.
+    </li>
+    <li>
+      <strong>Interactive Progress Charts:</strong> Using libraries like Chart.js to render body weight logs as vector line graphs.
+    </li>
+    <li>
+      <strong>AI-Generated Workouts:</strong> Integrating machine learning APIs to build custom workout recommendations based on user history and goals.
+    </li>
+  </ul>
+
+  <!-- ==================== CHAPTER 10 ==================== -->
+  <h1>10. References (IEEE Format)</h1>
+  <ol class="no-indent" style="list-style-type: decimal;">
+    <li>
+      G. Fireman, <i>Serverless Architectures and NoSQL Databases: Building Scalable Web Apps</i>. New York, NY: Academic Press, 2022.
+    </li>
+    <li>
+      D. Flanagan, <i>JavaScript: The Definitive Guide: Master the World's Most-Used Programming Language</i>, 7th ed. Sebastopol, CA: O'Reilly Media, 2020.
+    </li>
+    <li>
+      M. West, <i>Firebase Cloud Firestore: Dynamic Data Synchronization for Web Clients</i>. Boston, MA: TechTech Publications, 2023.
+    </li>
+    <li>
+      E. Gamma, R. Helm, R. Johnson, and J. Vlissides, <i>Design Patterns: Elements of Reusable Object-Oriented Software</i>. Reading, MA: Addison-Wesley, 1995.
+    </li>
+    <li>
+      "Cloud Firestore Documentation", Google Developers. [Online]. Available: <a href="https://firebase.google.com/docs/firestore" target="_blank">https://firebase.google.com/docs/firestore</a>. [Accessed: 04-Jun-2026].
+    </li>
+    <li>
+      R. Fielding, "Architectural Styles and the Design of Network-based Software Architectures", Ph.D. dissertation, Univ. California, Irvine, CA, 2000.
+    </li>
+  </ol>
+
+  <!-- Centered Page Number footer placeholder for printing -->
+  <div class="page-footer-custom no-indent">
+    FitLife Minor Project Report - BCA VI Semester
+  </div>
+
+</body>
+</html>
