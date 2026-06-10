@@ -3,12 +3,12 @@
 // FIREBASE CONFIGURATION & INITIALIZATION
 // Replace these parameters with your actual Firebase project web app configuration.
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyBpD3PeQLWQtrMp4ptoJnQ30kI3slY4qGA",
+  authDomain: "fitlife-webpage.firebaseapp.com",
+  projectId: "fitlife-webpage",
+  storageBucket: "fitlife-webpage.firebasestorage.app",
+  messagingSenderId: "785356108176",
+  appId: "1:785356108176:web:af2ba489385fac19c28315"
 };
 
 let db = null;
